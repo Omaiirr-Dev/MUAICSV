@@ -691,36 +691,62 @@ function parsePrayerData(rows) {
   const GREG_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const GREG_MONTH_LOWER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
-  // ── Scan the header rows (before data) to find the starting month ──────────
-  // The CSV has a column header like "January" in col 3 of the header section.
+  // Match a cell value to a month index — handles full names ("February") and
+  // abbreviations ("Feb") by checking if any month name is contained in the cell.
+  function matchMonth(cell) {
+    const s = (cell || '').trim().toLowerCase();
+    if (!s) return -1;
+    // Exact match first
+    const exact = GREG_MONTH_LOWER.indexOf(s);
+    if (exact !== -1) return exact;
+    // Full name contains abbreviation (e.g. "february" contains "feb")
+    for (let i = 0; i < GREG_MONTH_LOWER.length; i++) {
+      if (s.startsWith(GREG_MONTH_LOWER[i])) return i;
+    }
+    return -1;
+  }
+
   let runningMonth = -1;
   let runningYear  = new Date().getFullYear();
 
+  // ── 1. Scan header rows (before data) for the starting Gregorian month ──────
   for (let i = 0; i < dataStart; i++) {
     for (const cell of rows[i]) {
-      const mi = GREG_MONTH_LOWER.indexOf((cell || '').trim().toLowerCase());
+      const mi = matchMonth(cell);
       if (mi !== -1) { runningMonth = mi; break; }
     }
     if (runningMonth !== -1) break;
+  }
+
+  // ── 2. If not found in headers, find the FIRST month name in col 3 of data
+  //       rows and use (that month - 1) as the starting month ──────────────────
+  if (runningMonth === -1) {
+    for (let i = dataStart; i < rows.length; i++) {
+      const cell = (rows[i][3] || '').trim();
+      const mi = matchMonth(cell);
+      if (mi !== -1) {
+        runningMonth = mi === 0 ? 11 : mi - 1; // month before the first named one
+        if (mi === 0) runningYear--;            // wrapped back a year
+        break;
+      }
+    }
   }
 
   for (let i = dataStart; i < rows.length; i++) {
     const r = rows[i];
     const dayName = r[1];
 
-    // Non-day rows: check every cell for a month name (handles mid-table "Feb" rows)
+    // Non-day rows: check col 3 for a month name (handles mid-table month label rows)
     if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) {
-      for (const cell of r) {
-        const mi = GREG_MONTH_LOWER.indexOf((cell || '').trim().toLowerCase());
-        if (mi !== -1) { runningMonth = mi; break; }
-      }
+      const mi = matchMonth(r[3]);
+      if (mi !== -1) runningMonth = mi;
       continue;
     }
 
-    // Day row: col 3 is either a day number ("20") or a month name ("Feb") on
+    // Day row: col 3 is either a day number ("20") or a month name ("Mar") on
     // the first day of a new month.
     const gregRaw = (r[3] || '').trim();
-    const gregMonthIdx = GREG_MONTH_LOWER.indexOf(gregRaw.toLowerCase());
+    const gregMonthIdx = matchMonth(gregRaw);
     if (gregMonthIdx !== -1) {
       runningMonth = gregMonthIdx;
     }
