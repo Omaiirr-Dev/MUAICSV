@@ -630,13 +630,36 @@ function parseCSV(text) {
 }
 
 function extractMonthTitle(rows) {
-  // Row 0: first non-empty cell should contain the title
-  for (const row of rows.slice(0, 4)) {
+  const ISLAMIC_MONTHS = [
+    'muharram','safar','rabi al-awwal','rabi al-thani','rabi ul awwal','rabi ul thani',
+    'jumada al-awwal','jumada al-thani','jumada ul awwal','jumada ul thani',
+    'rajab','sha\'ban','shaban','ramadan','ramadhan','shawwal',
+    'dhul qadah','dhul hijjah','rabi','jumada'
+  ];
+
+  // First pass: look for a cell that contains a known Islamic month name
+  for (const row of rows.slice(0, 8)) {
     for (const cell of row) {
-      if (cell && cell.length > 3) return cell.replace(/\n/g, ' ').trim();
+      if (!cell) continue;
+      const lower = cell.toLowerCase().replace(/\n/g,' ').trim();
+      for (const m of ISLAMIC_MONTHS) {
+        if (lower.includes(m)) return cell.replace(/\n/g, ' ').trim();
+      }
     }
   }
-  return 'Unknown Month';
+
+  // Second pass: look for standalone single-word cells that look like a month label
+  // (e.g. "Ramadan" on its own in a cell)
+  for (const row of rows.slice(0, 8)) {
+    for (const cell of row) {
+      if (cell && cell.trim().length > 3 && !cell.includes(',') && !/\d/.test(cell)) {
+        const words = cell.trim().split(/\s+/);
+        if (words.length <= 3) return cell.replace(/\n/g, ' ').trim();
+      }
+    }
+  }
+
+  return 'Birmingham Prayer Times';
 }
 
 function findDataStart(rows) {
