@@ -1,0 +1,290 @@
+const http = require('http');
+const fs   = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+// ─── UK TIMEZONE HELPER ───────────────────────────────────────────────────────
+// Converts a bare "H:MM" prayer time + a JS Date (used only for its calendar
+// date in Europe/London) into a UTC Date, correctly handling GMT/BST.
+//
+// Strategy: build an ISO string that looks like UK local time, then ask the
+// Intl machinery what UTC offset London has at that moment, and adjust.
+//
+// Works with Node's built-in Intl — no packages needed.
+
+const UK_TZ = 'Europe/London';
+
+function ukTimeToUTC(dateInUK, timeStr) {
+  // dateInUK: a Date whose .getFullYear()/.getMonth()/.getDate() give the
+  //           correct UK calendar date (we ignore its time component).
+  // timeStr:  "H:MM" in 24-hour UK local time.
+  const [h, m] = timeStr.split(':').map(Number);
+  const y  = dateInUK.getFullYear();
+  const mo = dateInUK.getMonth() + 1;          // 1-based
+  const d  = dateInUK.getDate();
+
+  // Step 1: guess UTC = local time (pretend there's no offset).
+  //         This is close enough to establish whether we're in GMT or BST.
+  const guessUTC = Date.UTC(y, mo - 1, d, h, m, 0, 0);
+
+  // Step 2: ask Intl what "hour" London shows at that UTC instant.
+  const londonParts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: UK_TZ,
+    hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(new Date(guessUTC));
+
+  const londonH = parseInt(londonParts.find(p => p.type === 'hour').value);
+  const londonM = parseInt(londonParts.find(p => p.type === 'minute').value);
+
+  // Step 3: offset = londonLocal - UTC (in minutes). e.g. BST = +60 min.
+  const offsetMins = (londonH * 60 + londonM) - (h * 60 + m);
+
+  // Step 4: correct UTC = guess - offset
+  return new Date(guessUTC - offsetMins * 60 * 1000);
+}
+
+// Parse "20 Jan 2026" / "Feb" / "2" style Gregorian date strings from the CSV.
+// gregorianStr: the raw value from column D (e.g. "20", "Feb", "2")
+// We carry a running JS Date so we always know the month/year.
+function resolveGregorianDate(gregStr, runningDate) {
+  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  const str = (gregStr || '').trim().toLowerCase();
+
+  // If it's a month name, advance to day 1 of that month
+  const monthIdx = MONTHS.indexOf(str);
+  if (monthIdx !== -1) {
+    runningDate = new Date(Date.UTC(runningDate.getUTCFullYear(), monthIdx, 1));
+    return runningDate;
+  }
+
+  // Otherwise it's a day number — set the day, keep month/year
+  const day = parseInt(str);
+  if (!isNaN(day)) {
+    runningDate = new Date(Date.UTC(
+      runningDate.getUTCFullYear(),
+      runningDate.getUTCMonth(),
+      day
+    ));
+    return runningDate;
+  }
+
+  return runningDate; // unchanged if unparseable
+}
+
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const PORT           = process.env.PORT || 3000;
+const PASSWORD       = process.env.PASSWORD || 'qaws';
+const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
+                         .split(',').map(s => s.trim());
+
+// Session tokens: token -> expiry timestamp
+const sessions = new Map();
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+
+function makeToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function getClientIP(req) {
+  // Respect X-Forwarded-For when behind a proxy (Railway, nginx, etc.)
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket.remoteAddress?.replace(/^::ffff:/, '') || '';
+}
+
+function isIPAllowed(ip) {
+  return ALLOWED_IPS.includes(ip);
+}
+
+function getSessionToken(req) {
+  const cookie = req.headers.cookie || '';
+  const match  = cookie.match(/(?:^|;\s*)muai_session=([a-f0-9]{64})/);
+  return match ? match[1] : null;
+}
+
+function isValidSession(token) {
+  if (!token) return false;
+  const expiry = sessions.get(token);
+  if (!expiry) return false;
+  if (Date.now() > expiry) { sessions.delete(token); return false; }
+  return true;
+}
+
+function setCookieHeader(token) {
+  const expires = new Date(Date.now() + SESSION_TTL_MS).toUTCString();
+  return `muai_session=${token}; Path=/; HttpOnly; SameSite=Strict; Expires=${expires}`;
+}
+
+// ─── HTML PAGES ───────────────────────────────────────────────────────────────
+
+const LOGIN_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MUAI · Login</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0d0d0d;color:#e8e8e8;font-family:'Segoe UI',system-ui,sans-serif;
+         min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{background:#161616;border:1px solid #2a2a2a;border-radius:12px;
+          padding:40px 36px;width:100%;max-width:360px;text-align:center}
+    .logo{font-size:2rem;margin-bottom:8px}
+    h1{font-size:1.1rem;color:#c9a84c;margin-bottom:4px}
+    p{font-size:0.8rem;color:#666;margin-bottom:28px}
+    input{width:100%;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;
+          color:#e8e8e8;font-size:1rem;padding:11px 14px;outline:none;
+          letter-spacing:0.15em;text-align:center;margin-bottom:14px;
+          transition:border-color 0.15s}
+    input:focus{border-color:#c9a84c}
+    button{width:100%;background:#c9a84c;color:#111;border:none;border-radius:6px;
+           font-size:0.95rem;font-weight:700;padding:12px;cursor:pointer;
+           transition:opacity 0.15s}
+    button:hover{opacity:0.85}
+    .err{background:#2a1010;border:1px solid #7a2020;color:#f0a0a0;
+         border-radius:6px;padding:9px 12px;font-size:0.82rem;margin-bottom:14px;display:none}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🕌</div>
+  <h1>MUAI Prayer Times</h1>
+  <p>Birmingham Islamic Notification System</p>
+  <div class="err" id="err">Incorrect password</div>
+  <form method="POST" action="/login">
+    <input type="password" name="password" placeholder="Password" autofocus autocomplete="current-password"/>
+    <button type="submit">Enter</button>
+  </form>
+</div>
+<script>
+  const u = new URLSearchParams(location.search);
+  if (u.get('err')) document.getElementById('err').style.display = 'block';
+</script>
+</body>
+</html>`;
+
+const BLOCKED_PAGE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>403</title>
+  <style>
+    body{background:#0d0d0d;color:#666;font-family:monospace;
+         display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:8px}
+  </style>
+</head>
+<body><div style="font-size:2rem">🚫</div><div>403 — Access denied</div></body>
+</html>`;
+
+// ─── REQUEST HANDLER ──────────────────────────────────────────────────────────
+
+function parseBody(req) {
+  return new Promise(resolve => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; if (body.length > 1024) body = body.slice(0, 1024); });
+    req.on('end', () => resolve(body));
+  });
+}
+
+function parseFormBody(body) {
+  return Object.fromEntries(
+    body.split('&').map(pair => pair.split('=').map(s => decodeURIComponent(s.replace(/\+/g, ' '))))
+  );
+}
+
+const server = http.createServer(async (req, res) => {
+  const ip  = getClientIP(req);
+  const url = req.url.split('?')[0];
+
+  // ── IP check (always first) ──────────────────────────────────────────────
+  if (!isIPAllowed(ip)) {
+    console.log(`[BLOCKED] ${ip} → ${req.url}`);
+    res.writeHead(403, { 'Content-Type': 'text/html' });
+    res.end(BLOCKED_PAGE);
+    return;
+  }
+
+  // ── Login POST ───────────────────────────────────────────────────────────
+  if (url === '/login' && req.method === 'POST') {
+    const raw    = await parseBody(req);
+    const fields = parseFormBody(raw);
+    if (fields.password === PASSWORD) {
+      const token = makeToken();
+      sessions.set(token, Date.now() + SESSION_TTL_MS);
+      console.log(`[AUTH OK] ${ip}`);
+      res.writeHead(302, {
+        'Set-Cookie': setCookieHeader(token),
+        'Location':   '/',
+      });
+      res.end();
+    } else {
+      console.log(`[AUTH FAIL] ${ip}`);
+      res.writeHead(302, { 'Location': '/login?err=1' });
+      res.end();
+    }
+    return;
+  }
+
+  // ── Login GET ────────────────────────────────────────────────────────────
+  if (url === '/login') {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(LOGIN_PAGE);
+    return;
+  }
+
+  // ── Logout ───────────────────────────────────────────────────────────────
+  if (url === '/logout') {
+    const token = getSessionToken(req);
+    if (token) sessions.delete(token);
+    res.writeHead(302, {
+      'Set-Cookie': 'muai_session=; Path=/; HttpOnly; Max-Age=0',
+      'Location':   '/login',
+    });
+    res.end();
+    return;
+  }
+
+  // ── Session check ────────────────────────────────────────────────────────
+  const token = getSessionToken(req);
+  if (!isValidSession(token)) {
+    res.writeHead(302, { 'Location': '/login' });
+    res.end();
+    return;
+  }
+
+  // ── Serve static files ───────────────────────────────────────────────────
+  const safePath = url === '/' ? '/index.html' : url;
+  const filePath = path.join(__dirname, safePath.replace(/\.\./g, ''));
+
+  // Only allow files inside the project directory
+  if (!filePath.startsWith(__dirname)) {
+    res.writeHead(403); res.end(); return;
+  }
+
+  const ext = path.extname(filePath);
+  const mime = {
+    '.html': 'text/html',
+    '.css':  'text/css',
+    '.js':   'application/javascript',
+    '.json': 'application/json',
+    '.csv':  'text/csv',
+    '.ico':  'image/x-icon',
+  }[ext] || 'application/octet-stream';
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('404 Not Found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': mime });
+    res.end(data);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`MUAI Prayer Times server running on http://localhost:${PORT}`);
+  console.log(`Allowed IPs: ${ALLOWED_IPS.join(', ')}`);
+  console.log(`Password: ${PASSWORD}`);
+  console.log(`Session TTL: 8 hours`);
+});

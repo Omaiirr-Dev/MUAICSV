@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUAI Prayer Times</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --accent: #c9a84c;
+      --accent-dim: #7a6330;
+      --text: #e8e8e8;
+      --text-muted: #888;
+      --fajr: #5b8fa8;
+      --sunrise: #d4832a;
+      --zuhr: #6bb86b;
+      --asr: #c4934a;
+      --maghrib: #9b6fb5;
+      --isha: #4a7dc4;
+      --fri: #2a3d1a;
+      --fri-border: #5a8f2a;
+      --sat: #1a2a3d;
+      --sat-border: #2a5a8f;
+      --sun: #1a2a3d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    header .subtitle {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 40px;
+      text-align: center;
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: #1a1600;
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    .upload-zone h2 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .upload-zone p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #111;
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: #7a2020;
+      color: #f0c0c0;
+      border: 1px solid #a03030;
+    }
+
+    /* Month info bar */
+    .month-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .month-bar .month-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .month-bar .stats {
+      display: flex;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .month-bar .stats span strong {
+      color: var(--text);
+    }
+
+    /* Actions bar */
+    .actions-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* Prayer times table */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      min-width: 900px;
+    }
+
+    thead th {
+      background: var(--surface);
+      padding: 10px 8px;
+      text-align: center;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    thead .th-group {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    thead .th-fajr { color: var(--fajr); }
+    thead .th-sunrise { color: var(--sunrise); }
+    thead .th-zuhr { color: var(--zuhr); }
+    thead .th-asr { color: var(--asr); }
+    thead .th-maghrib { color: var(--maghrib); }
+    thead .th-isha { color: var(--isha); }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover { background: #1a1a1a; }
+
+    tbody tr.row-fri {
+      background: var(--fri);
+      border-left: 3px solid var(--fri-border);
+    }
+
+    tbody tr.row-fri:hover { background: #304020; }
+
+    tbody tr.row-sat {
+      background: #1a1a2a;
+    }
+
+    tbody tr.row-sun {
+      background: #1a1a2a;
+    }
+
+    tbody td {
+      padding: 9px 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .col-day { font-weight: 700; }
+    .col-day.fri { color: var(--fri-border); }
+    .col-day.sat { color: #6a9fd4; }
+    .col-day.sun { color: #6a9fd4; }
+
+    .col-date-hijri {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .col-date-greg {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    .time-cell {
+      font-family: 'Courier New', monospace;
+      font-size: 0.88rem;
+    }
+
+    .jamat-cell {
+      font-family: 'Courier New', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .fajr-time { color: var(--fajr); }
+    .fajr-jamat { color: #a0d0e8; }
+    .sunrise-time { color: var(--sunrise); }
+    .zuhr-time { color: var(--zuhr); }
+    .zuhr-jamat { color: #a0e8a0; }
+    .asr-time { color: var(--asr); }
+    .asr-jamat { color: #e8c080; }
+    .maghrib-time { color: var(--maghrib); }
+    .maghrib-jamat { color: #c8a0d8; }
+    .isha-time { color: var(--isha); }
+    .isha-jamat { color: #80b0e8; }
+
+    .cell-empty { color: #333; }
+
+    /* Notification preview panel */
+    .preview-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+
+    .preview-panel h3 {
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+
+    .notif-day {
+      margin-bottom: 20px;
+    }
+
+    .notif-day-header {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .notif-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .notif-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    .notif-body { flex: 1; }
+
+    .notif-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .notif-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .notif-countdown {
+      font-size: 0.82rem;
+      color: var(--accent);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Day filter tabs */
+    .day-filter {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .day-tab {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .day-tab:hover, .day-tab.active {
+      background: var(--accent);
+      color: #111;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* Error/status messages */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+    }
+
+    .alert-error {
+      background: #2a1010;
+      border: 1px solid #7a2020;
+      color: #f0a0a0;
+    }
+
+    .alert-success {
+      background: #102a10;
+      border: 1px solid #207a20;
+      color: #a0f0a0;
+    }
+
+    .alert-info {
+      background: #10182a;
+      border: 1px solid #204a7a;
+      color: #a0c8f0;
+    }
+
+    /* Hidden */
+    .hidden { display: none !important; }
+
+    /* Section */
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .raw-toggle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: underline;
+      margin-left: auto;
+    }
+
+    .raw-panel {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: #888;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">🕌 MUAI Prayer Times</div>
+    <div class="subtitle">Birmingham Islamic Prayer Notification System</div>
+  </div>
+  <a href="/logout" style="margin-left:auto;font-size:0.78rem;color:#555;text-decoration:none;padding:6px 12px;border:1px solid #2a2a2a;border-radius:5px;" onmouseover="this.style.color='#e8e8e8'" onmouseout="this.style.color='#555'">Sign out</a>
+</header>
+
+<div class="main">
+
+  <!-- Upload Section -->
+  <div class="section" id="section-upload">
+    <div class="section-title">Import CSV</div>
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="csv-file" accept=".csv" />
+      <div class="upload-icon">📄</div>
+      <h2>Drop your prayer times CSV here</h2>
+      <p>or click to browse &nbsp;·&nbsp; Accepts MUAI Birmingham format</p>
+    </div>
+    <div style="margin-top:10px; text-align:right;">
+      <span class="raw-toggle" id="paste-toggle">or paste CSV text instead</span>
+    </div>
+    <div id="paste-area" class="hidden" style="margin-top:10px;">
+      <textarea id="csv-paste" rows="6" style="width:100%;background:#0a0a0a;color:#aaa;border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:0.78rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
+      <button class="btn btn-secondary" style="margin-top:8px;" id="parse-paste-btn">Parse Pasted CSV</button>
+    </div>
+  </div>
+
+  <!-- Alert area -->
+  <div id="alert-area"></div>
+
+  <!-- Parsed data area (hidden until CSV loaded) -->
+  <div id="data-area" class="hidden">
+
+    <!-- Month info -->
+    <div class="section">
+      <div class="section-title">Parsed Month</div>
+      <div class="month-bar">
+        <div class="month-title" id="month-title">—</div>
+        <div class="stats">
+          <span><strong id="stat-days">0</strong> days</span>
+          <span><strong id="stat-fri">0</strong> Fridays</span>
+          <span><strong id="stat-start">—</strong> start date</span>
+          <span><strong id="stat-end">—</strong> end date</span>
+        </div>
+        <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">✕ Clear</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="section">
+      <div class="section-title">Actions</div>
+      <div class="actions-bar">
+        <button class="btn btn-primary" id="preview-btn">👁 Preview Notifications</button>
+        <button class="btn btn-secondary" id="raw-btn">Show Raw Parsed JSON</button>
+      </div>
+    </div>
+
+    <!-- Prayer times table -->
+    <div class="section">
+      <div class="section-title">Prayer Times — Parsed Data</div>
+      <div class="table-wrap">
+        <table id="prayer-table">
+          <thead>
+            <tr>
+              <th rowspan="2" style="min-width:44px;">Day</th>
+              <th rowspan="2" style="min-width:40px;">Sha'ban</th>
+              <th rowspan="2" style="min-width:60px;">Date</th>
+              <th colspan="2" class="th-group th-fajr">Fajr</th>
+              <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
+              <th colspan="2" class="th-group th-zuhr">Zuhr</th>
+              <th colspan="2" class="th-group th-asr">Asr</th>
+              <th colspan="2" class="th-group th-maghrib">Maghrib</th>
+              <th colspan="2" class="th-group th-isha">Isha</th>
+            </tr>
+            <tr>
+              <th class="th-fajr">Start</th>
+              <th class="th-fajr">Jamat</th>
+              <th class="th-zuhr">Start</th>
+              <th class="th-zuhr">Jamat</th>
+              <th class="th-asr">Start</th>
+              <th class="th-asr">Jamat</th>
+              <th class="th-maghrib">Adhan</th>
+              <th class="th-maghrib">Jamat</th>
+              <th class="th-isha">Start</th>
+              <th class="th-isha">Jamat</th>
+            </tr>
+          </thead>
+          <tbody id="prayer-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Raw JSON panel -->
+    <div id="raw-json-panel" class="hidden section">
+      <div class="section-title">Raw Parsed JSON</div>
+      <div class="raw-panel" id="raw-json-content"></div>
+    </div>
+
+    <!-- Notification preview -->
+    <div id="preview-panel-wrap" class="hidden section">
+      <div class="section-title">Notification Preview</div>
+      <div class="day-filter" id="day-filter-tabs"></div>
+      <div class="preview-panel" id="preview-container"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CSV PARSER
+// ─────────────────────────────────────────────
+
+function parseCSV(text) {
+  // Normalise line endings
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+  // Each line: split by comma, handling quoted fields (including embedded newlines
+  // that were already joined). Simple state-machine CSV parse.
+  function splitLine(line) {
+    const fields = [];
+    let cur = '';
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+        else { inQuote = !inQuote; }
+      } else if (ch === ',' && !inQuote) {
+        fields.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    fields.push(cur.trim());
+    return fields;
+  }
+
+  // First pass: re-join lines that are inside quotes (multi-line cells)
+  const joinedLines = [];
+  let buffer = '';
+  let quoteCount = 0;
+  for (const line of lines) {
+    quoteCount += (line.match(/"/g) || []).length;
+    buffer += (buffer ? '\n' : '') + line;
+    if (quoteCount % 2 === 0) {
+      joinedLines.push(buffer);
+      buffer = '';
+    }
+  }
+  if (buffer) joinedLines.push(buffer);
+
+  const rows = joinedLines.map(splitLine);
+  return rows;
+}
+
+function extractMonthTitle(rows) {
+  // Row 0: first non-empty cell should contain the title
+  for (const row of rows.slice(0, 4)) {
+    for (const cell of row) {
+      if (cell && cell.length > 3) return cell.replace(/\n/g, ' ').trim();
+    }
+  }
+  return 'Unknown Month';
+}
+
+function findDataStart(rows) {
+  // Look for the row containing "Tue" or "Mon" etc in the day column (col index 1)
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  for (let i = 0; i < rows.length; i++) {
+    if (days.includes(rows[i][1])) return i;
+  }
+  return -1;
+}
+
+function resolveTime(value, lastValue) {
+  // `""` in CSV becomes empty string after parsing — means "same as above"
+  if (!value || value === '' || value === '"') return lastValue;
+  return value;
+}
+
+function parsePrayerData(rows) {
+  const title = extractMonthTitle(rows);
+  const dataStart = findDataStart(rows);
+  if (dataStart === -1) throw new Error('Could not find prayer time data rows. Is this the right CSV format?');
+
+  const days = [];
+  const last = {
+    fajrJamat: '', zuhrJamat: '', asrJamat: '',
+    maghribJamat: '', ishaJamat: ''
+  };
+
+  for (let i = dataStart; i < rows.length; i++) {
+    const r = rows[i];
+    // Columns (0-indexed): 0=empty, 1=Day, 2=Sha'ban, 3=Greg, 4=FajrStart, 5=FajrJamat,
+    // 6=Sunrise, 7=ZuhrStart, 8=ZuhrJamat, 9=AsrStart, 10=AsrJamat,
+    // 11=MaghribAdhan, 12=MaghribJamat, 13=IshaStart, 14=IshaJamat
+    const dayName = r[1];
+    if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) continue;
+
+    const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
+    const zuhrJamat    = resolveTime(r[8],  last.zuhrJamat);
+    const asrJamat     = resolveTime(r[10], last.asrJamat);
+    const maghribJamat = resolveTime(r[12], last.maghribJamat);
+    const ishaJamat    = resolveTime(r[14], last.ishaJamat);
+
+    last.fajrJamat    = fajrJamat;
+    last.zuhrJamat    = zuhrJamat;
+    last.asrJamat     = asrJamat;
+    last.maghribJamat = maghribJamat;
+    last.ishaJamat    = ishaJamat;
+
+    days.push({
+      day:           dayName,
+      hijriDate:     r[2] || '',
+      gregDate:      r[3] || '',
+      fajrStart:     r[4] || '',
+      fajrJamat:     fajrJamat,
+      sunrise:       r[6] || '',
+      zuhrStart:     r[7] || '',
+      zuhrJamat:     zuhrJamat,
+      asrStart:      r[9] || '',
+      asrJamat:      asrJamat,
+      maghribAdhan:  r[11] || '',
+      maghribJamat:  maghribJamat,
+      ishaStart:     r[13] || '',
+      ishaJamat:     ishaJamat,
+    });
+  }
+
+  if (days.length === 0) throw new Error('No prayer day rows found. Check CSV structure.');
+
+  return { title, days };
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATION BUILDER
+// ─────────────────────────────────────────────
+
+function timeTo24(t) {
+  if (!t) return null;
+  const parts = t.match(/^(\d+):(\d+)$/);
+  if (!parts) return null;
+  return { h: parseInt(parts[1]), m: parseInt(parts[2]) };
+}
+
+// Prayer times in the CSV are bare 12-hour values with no AM/PM.
+// We resolve them in order: each prayer must come after the previous one.
+// If a time's raw value is less than the previous prayer's hour, it has wrapped
+// past 12 — add 12 to convert it to 24h.
+function toMinutes(t) {
+  return t.h * 60 + t.m;
+}
+
+function resolveSequential(times) {
+  // times: array of {h, m} | null, in chronological prayer order
+  // Returns array of total-minutes values, adjusting for 12→PM wrap
+  let prev = 0;
+  return times.map(t => {
+    if (!t) return null;
+    let mins = t.h * 60 + t.m;
+    // If this time is before the previous (e.g. 2:48 after 12:23), add 12h
+    if (mins < prev) mins += 12 * 60;
+    prev = mins;
+    return mins;
+  });
+}
+
+function minutesBetween(fromMins, toMins) {
+  if (fromMins === null || toMins === null) return null;
+  return toMins - fromMins;
+}
+
+function formatDiff(mins) {
+  if (mins === null || mins < 0) return null;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function fmtTime(t) {
+  if (!t) return '—';
+  const p = timeTo24(t);
+  if (!p) return t;
+  const ampm = p.h < 12 ? 'AM' : 'PM';
+  const h = p.h % 12 || 12;
+  const m = String(p.m).padStart(2, '0');
+  return `${h}:${m} ${ampm}`;
+}
+
+function buildNotifications(day) {
+  const notes = [];
+
+  const [fajrM, zuhrM, asrM, maghribM, ishaM] = resolveSequential([
+    timeTo24(day.fajrStart),
+    timeTo24(day.zuhrStart),
+    timeTo24(day.asrStart),
+    timeTo24(day.maghribAdhan),
+    timeTo24(day.ishaStart),
+  ]);
+
+  // Each notification: prayer line + countdown to next prayer on the line below
+  const prayers = [
+    {
+      icon: '🕋',
+      line1: `Fajr has begun`,
+      details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '',
+      countdown: formatDiff(minutesBetween(fajrM, zuhrM)),
+      nextName: 'Zuhr',
+      nextTime: fmtTime(day.zuhrStart),
+    },
+    {
+      icon: '☀️',
+      line1: `Zuhr has begun${day.day === 'Fri' ? ' · Jumu\'ah' : ''}`,
+      details: '',
+      countdown: formatDiff(minutesBetween(zuhrM, asrM)),
+      nextName: 'Asr',
+      nextTime: fmtTime(day.asrStart),
+    },
+    {
+      icon: '⛅',
+      line1: `Asr has begun`,
+      details: '',
+      countdown: formatDiff(minutesBetween(asrM, maghribM)),
+      nextName: 'Maghrib',
+      nextTime: fmtTime(day.maghribAdhan),
+    },
+    {
+      icon: '🌅',
+      line1: `Maghrib has begun`,
+      details: '',
+      countdown: formatDiff(minutesBetween(maghribM, ishaM)),
+      nextName: 'Isha',
+      nextTime: fmtTime(day.ishaStart),
+    },
+    {
+      icon: '🌙',
+      line1: `Isha has begun`,
+      details: '',
+      countdown: null,
+      nextName: null,
+      nextTime: null,
+    },
+  ];
+
+  for (const p of prayers) {
+    notes.push({
+      icon: p.icon,
+      title: p.line1,
+      details: p.details,
+      countdown: p.countdown ? `⏰ ${p.countdown} until ${p.nextName} · ${p.nextTime}` : null,
+    });
+  }
+
+  return notes;
+}
+
+// ─────────────────────────────────────────────
+// DOM RENDERING
+// ─────────────────────────────────────────────
+
+let parsedData = null;
+
+function showAlert(msg, type = 'info') {
+  const el = document.getElementById('alert-area');
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 6000);
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('prayer-tbody');
+  tbody.innerHTML = '';
+
+  for (const d of data.days) {
+    const tr = document.createElement('tr');
+    const isDay = d.day.toLowerCase();
+    if (isDay === 'fri') tr.className = 'row-fri';
+    else if (isDay === 'sat') tr.className = 'row-sat';
+    else if (isDay === 'sun') tr.className = 'row-sun';
+
+    const dayClass = ['fri','sat','sun'].includes(isDay) ? isDay : '';
+
+    function tc(val, cls) {
+      return `<td class="time-cell ${cls}">${val || '<span class="cell-empty">—</span>'}</td>`;
+    }
+    function jc(val, cls) {
+      return `<td class="jamat-cell ${cls}">${val || '<span class="cell-empty">—</span>'}</td>`;
+    }
+
+    tr.innerHTML = `
+      <td class="col-day ${dayClass}">${d.day}</td>
+      <td class="col-date-hijri">${d.hijriDate}</td>
+      <td class="col-date-greg">${d.gregDate}</td>
+      ${tc(d.fajrStart,    'fajr-time')}
+      ${jc(d.fajrJamat,   'fajr-jamat')}
+      ${tc(d.sunrise,      'sunrise-time')}
+      ${tc(d.zuhrStart,    'zuhr-time')}
+      ${jc(d.zuhrJamat,   'zuhr-jamat')}
+      ${tc(d.asrStart,     'asr-time')}
+      ${jc(d.asrJamat,    'asr-jamat')}
+      ${tc(d.maghribAdhan, 'maghrib-time')}
+      ${jc(d.maghribJamat,'maghrib-jamat')}
+      ${tc(d.ishaStart,    'isha-time')}
+      ${jc(d.ishaJamat,   'isha-jamat')}
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderMonthBar(data) {
+  document.getElementById('month-title').textContent = data.title;
+  document.getElementById('stat-days').textContent  = data.days.length;
+  document.getElementById('stat-fri').textContent   = data.days.filter(d => d.day === 'Fri').length;
+  const first = data.days[0];
+  const last  = data.days[data.days.length - 1];
+  document.getElementById('stat-start').textContent = `${first.day} ${first.hijriDate} (${first.gregDate})`;
+  document.getElementById('stat-end').textContent   = `${last.day} ${last.hijriDate} (${last.gregDate})`;
+}
+
+function renderNotificationPreview(data, filterDay = 'all') {
+  const container = document.getElementById('preview-container');
+  container.innerHTML = '';
+
+  const filtered = filterDay === 'all' ? data.days : data.days.filter(d => d.day === filterDay);
+
+  for (const day of filtered) {
+    const notes = buildNotifications(day);
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'notif-day';
+
+    dayDiv.innerHTML = `<div class="notif-day-header">${day.day} · Sha'ban ${day.hijriDate} · ${day.gregDate}</div>`;
+
+    for (const n of notes) {
+      const card = document.createElement('div');
+      card.className = 'notif-card';
+      card.innerHTML = `
+        <div class="notif-icon">${n.icon}</div>
+        <div class="notif-body">
+          <div class="notif-title">${n.title}</div>
+          ${n.details ? `<div class="notif-sub">${n.details}</div>` : ''}
+          ${n.countdown ? `<div class="notif-countdown">${n.countdown}</div>` : ''}
+        </div>
+      `;
+      dayDiv.appendChild(card);
+    }
+
+    container.appendChild(dayDiv);
+  }
+}
+
+function renderDayFilterTabs(data) {
+  const uniqueDays = [...new Set(data.days.map(d => d.day))];
+  const tabs = document.getElementById('day-filter-tabs');
+  tabs.innerHTML = '';
+
+  const allTab = document.createElement('div');
+  allTab.className = 'day-tab active';
+  allTab.textContent = 'All';
+  allTab.dataset.day = 'all';
+  tabs.appendChild(allTab);
+
+  for (const d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']) {
+    if (uniqueDays.includes(d)) {
+      const tab = document.createElement('div');
+      tab.className = 'day-tab';
+      tab.textContent = d;
+      tab.dataset.day = d;
+      tabs.appendChild(tab);
+    }
+  }
+
+  tabs.addEventListener('click', e => {
+    const tab = e.target.closest('.day-tab');
+    if (!tab) return;
+    tabs.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderNotificationPreview(parsedData, tab.dataset.day);
+  });
+}
+
+function loadData(data) {
+  parsedData = data;
+  renderMonthBar(data);
+  renderTable(data);
+  document.getElementById('data-area').classList.remove('hidden');
+  document.getElementById('preview-panel-wrap').classList.add('hidden');
+  document.getElementById('raw-json-panel').classList.add('hidden');
+  showAlert(`✓ Parsed ${data.days.length} days from "${data.title}"`, 'success');
+}
+
+function handleCSVText(text) {
+  try {
+    const rows = parseCSV(text);
+    const data = parsePrayerData(rows);
+    loadData(data);
+  } catch (err) {
+    showAlert(`Parse error: ${err.message}`, 'error');
+    console.error(err);
+  }
+}
+
+// ─────────────────────────────────────────────
+// EVENT WIRING
+// ─────────────────────────────────────────────
+
+// File input
+document.getElementById('csv-file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => handleCSVText(ev.target.result);
+  reader.readAsText(file);
+});
+
+// Drag & drop
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => handleCSVText(ev.target.result);
+  reader.readAsText(file);
+});
+
+// Paste toggle
+document.getElementById('paste-toggle').addEventListener('click', () => {
+  document.getElementById('paste-area').classList.toggle('hidden');
+});
+
+document.getElementById('parse-paste-btn').addEventListener('click', () => {
+  const text = document.getElementById('csv-paste').value;
+  if (!text.trim()) { showAlert('Nothing pasted yet.', 'error'); return; }
+  handleCSVText(text);
+});
+
+// Clear
+document.getElementById('clear-btn').addEventListener('click', () => {
+  parsedData = null;
+  document.getElementById('data-area').classList.add('hidden');
+  document.getElementById('csv-file').value = '';
+  document.getElementById('csv-paste').value = '';
+});
+
+// Preview notifications
+document.getElementById('preview-btn').addEventListener('click', () => {
+  if (!parsedData) return;
+  renderDayFilterTabs(parsedData);
+  renderNotificationPreview(parsedData, 'all');
+  document.getElementById('preview-panel-wrap').classList.remove('hidden');
+  document.getElementById('preview-panel-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+// Raw JSON
+document.getElementById('raw-btn').addEventListener('click', () => {
+  if (!parsedData) return;
+  const panel = document.getElementById('raw-json-panel');
+  const content = document.getElementById('raw-json-content');
+  if (panel.classList.contains('hidden')) {
+    content.textContent = JSON.stringify(parsedData, null, 2);
+    panel.classList.remove('hidden');
+  } else {
+    panel.classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
