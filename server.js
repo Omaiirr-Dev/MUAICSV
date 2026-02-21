@@ -87,41 +87,57 @@ function saveQueue(queue) {
 }
 
 // ─── NTFY PUSH ────────────────────────────────────────────────────────────────
-// Uses header-based publishing (not JSON body) so ntfy never needs to parse
-// Content-Type — avoids the raw-JSON-as-message bug caused by proxy/Node quirks.
-// Non-ASCII header values are URL-encoded; ntfy auto-decodes them.
+// Posts JSON to the ntfy ROOT endpoint (not the topic URL) — posting JSON to
+// the topic URL causes ntfy to treat the body as a file attachment.
+// Uses Unix timestamps for 'at' — ntfy rejects ISO 8601 in scheduled delivery.
 async function pushToNtfy(notification) {
-  const url = `${NTFY_SERVER}/${NTFY_CHANNEL}`;
+  const url = NTFY_SERVER;   // root endpoint — topic goes inside JSON body
   const message = [notification.details, notification.countdown].filter(Boolean).join('\n') || notification.title;
 
-  const headers = {
-    'Content-Type': 'text/plain; charset=utf-8',
-    'X-Title':      encodeURIComponent(notification.title),
-    'X-Priority':   'urgent',
-    'X-Tags':       'bell',
+  const payload = {
+    topic:    NTFY_CHANNEL,
+    title:    notification.title,
+    message,
+    priority: 5,
+    tags:     ['bell'],
   };
   if (notification.fireUTC) {
-    // Strip milliseconds — some ntfy versions are strict about RFC 3339 format
-    headers['X-At'] = notification.fireUTC.replace(/\.\d{3}Z$/, 'Z');
+    payload.at = Math.floor(new Date(notification.fireUTC).getTime() / 1000);
   }
 
+  const body = JSON.stringify(payload);
+
   try {
-    // Node 18+ has native fetch; older Nodes fall back to http module
     if (typeof fetch !== 'undefined') {
-      const resp = await fetch(url, { method: 'POST', headers, body: message });
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => '');
+        console.error(`[NTFY] ${resp.status}: ${err}`);
+      }
       return resp.ok;
     } else {
       return await new Promise((resolve) => {
         const mod = url.startsWith('https') ? require('https') : require('http');
         const parsed  = new URL(url);
-        const bodyBuf = Buffer.from(message, 'utf8');
+        const bodyBuf = Buffer.from(body, 'utf8');
         const req = mod.request({
           hostname: parsed.hostname,
           port:     parsed.port || (url.startsWith('https') ? 443 : 80),
           path:     parsed.pathname,
           method:   'POST',
-          headers:  { ...headers, 'Content-Length': bodyBuf.length },
-        }, res => resolve(res.statusCode < 300));
+          headers:  { 'Content-Type': 'application/json', 'Content-Length': bodyBuf.length },
+        }, res => {
+          if (res.statusCode >= 300) {
+            let errBody = '';
+            res.on('data', d => errBody += d);
+            res.on('end', () => console.error(`[NTFY] ${res.statusCode}: ${errBody}`));
+          }
+          resolve(res.statusCode < 300);
+        });
         req.on('error', () => resolve(false));
         req.write(bodyBuf);
         req.end();
