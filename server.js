@@ -4,30 +4,16 @@ const path = require('path');
 const crypto = require('crypto');
 
 // ─── UK TIMEZONE HELPER ───────────────────────────────────────────────────────
-// Converts a bare "H:MM" prayer time + a JS Date (used only for its calendar
-// date in Europe/London) into a UTC Date, correctly handling GMT/BST.
-//
-// Strategy: build an ISO string that looks like UK local time, then ask the
-// Intl machinery what UTC offset London has at that moment, and adjust.
-//
-// Works with Node's built-in Intl — no packages needed.
-
 const UK_TZ = 'Europe/London';
 
 function ukTimeToUTC(dateInUK, timeStr) {
-  // dateInUK: a Date whose .getFullYear()/.getMonth()/.getDate() give the
-  //           correct UK calendar date (we ignore its time component).
-  // timeStr:  "H:MM" in 24-hour UK local time.
   const [h, m] = timeStr.split(':').map(Number);
   const y  = dateInUK.getFullYear();
-  const mo = dateInUK.getMonth() + 1;          // 1-based
+  const mo = dateInUK.getMonth() + 1;
   const d  = dateInUK.getDate();
 
-  // Step 1: guess UTC = local time (pretend there's no offset).
-  //         This is close enough to establish whether we're in GMT or BST.
   const guessUTC = Date.UTC(y, mo - 1, d, h, m, 0, 0);
 
-  // Step 2: ask Intl what "hour" London shows at that UTC instant.
   const londonParts = new Intl.DateTimeFormat('en-GB', {
     timeZone: UK_TZ,
     hour: 'numeric', minute: 'numeric', hour12: false,
@@ -36,39 +22,8 @@ function ukTimeToUTC(dateInUK, timeStr) {
   const londonH = parseInt(londonParts.find(p => p.type === 'hour').value);
   const londonM = parseInt(londonParts.find(p => p.type === 'minute').value);
 
-  // Step 3: offset = londonLocal - UTC (in minutes). e.g. BST = +60 min.
   const offsetMins = (londonH * 60 + londonM) - (h * 60 + m);
-
-  // Step 4: correct UTC = guess - offset
   return new Date(guessUTC - offsetMins * 60 * 1000);
-}
-
-// Parse "20 Jan 2026" / "Feb" / "2" style Gregorian date strings from the CSV.
-// gregorianStr: the raw value from column D (e.g. "20", "Feb", "2")
-// We carry a running JS Date so we always know the month/year.
-function resolveGregorianDate(gregStr, runningDate) {
-  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-  const str = (gregStr || '').trim().toLowerCase();
-
-  // If it's a month name, advance to day 1 of that month
-  const monthIdx = MONTHS.indexOf(str);
-  if (monthIdx !== -1) {
-    runningDate = new Date(Date.UTC(runningDate.getUTCFullYear(), monthIdx, 1));
-    return runningDate;
-  }
-
-  // Otherwise it's a day number — set the day, keep month/year
-  const day = parseInt(str);
-  if (!isNaN(day)) {
-    runningDate = new Date(Date.UTC(
-      runningDate.getUTCFullYear(),
-      runningDate.getUTCMonth(),
-      day
-    ));
-    return runningDate;
-  }
-
-  return runningDate; // unchanged if unparseable
 }
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
@@ -76,6 +31,8 @@ const PORT           = process.env.PORT || 3000;
 const PASSWORD       = process.env.PASSWORD || 'qaws';
 const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
                          .split(',').map(s => s.trim());
+const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'CSVMUAITEST';
+const NTFY_SERVER    = process.env.NTFY_SERVER   || 'https://ntfy.sh';
 
 // Session tokens: token -> expiry timestamp
 const sessions = new Map();
@@ -86,7 +43,6 @@ function makeToken() {
 }
 
 function getClientIP(req) {
-  // Respect X-Forwarded-For when behind a proxy (Railway, nginx, etc.)
   const forwarded = req.headers['x-forwarded-for'];
   if (forwarded) return forwarded.split(',')[0].trim();
   return req.socket.remoteAddress?.replace(/^::ffff:/, '') || '';
@@ -113,6 +69,65 @@ function isValidSession(token) {
 function setCookieHeader(token) {
   const expires = new Date(Date.now() + SESSION_TTL_MS).toUTCString();
   return `muai_session=${token}; Path=/; HttpOnly; SameSite=Strict; Expires=${expires}`;
+}
+
+// ─── QUEUE PERSISTENCE ────────────────────────────────────────────────────────
+const QUEUE_FILE = path.join(__dirname, 'queue.json');
+
+function loadQueue() {
+  try {
+    return JSON.parse(fs.readFileSync(QUEUE_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function saveQueue(queue) {
+  fs.writeFileSync(QUEUE_FILE, JSON.stringify(queue, null, 2), 'utf8');
+}
+
+// ─── NTFY PUSH ────────────────────────────────────────────────────────────────
+async function pushToNtfy(notification) {
+  const url = `${NTFY_SERVER}/${NTFY_CHANNEL}`;
+  const body = JSON.stringify({
+    topic:    NTFY_CHANNEL,
+    title:    notification.title,
+    message:  [notification.details, notification.countdown].filter(Boolean).join('\n') || notification.title,
+    priority: 'urgent',
+    tags:     [notification.icon ? 'bell' : 'bell'],
+    at:       notification.fireUTC,   // ISO string for scheduled delivery
+  });
+
+  try {
+    // Node 18+ has native fetch; older Nodes can use http module
+    if (typeof fetch !== 'undefined') {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
+      return resp.ok;
+    } else {
+      // Fallback using built-in http/https
+      return await new Promise((resolve) => {
+        const mod = url.startsWith('https') ? require('https') : require('http');
+        const parsed = new URL(url);
+        const req = mod.request({
+          hostname: parsed.hostname,
+          port:     parsed.port || (url.startsWith('https') ? 443 : 80),
+          path:     parsed.pathname,
+          method:   'POST',
+          headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+        }, res => resolve(res.statusCode < 300));
+        req.on('error', () => resolve(false));
+        req.write(body);
+        req.end();
+      });
+    }
+  } catch (e) {
+    console.error('[NTFY] push error:', e.message);
+    return false;
+  }
 }
 
 // ─── HTML PAGES ───────────────────────────────────────────────────────────────
@@ -181,7 +196,7 @@ const BLOCKED_PAGE = `<!DOCTYPE html>
 function parseBody(req) {
   return new Promise(resolve => {
     let body = '';
-    req.on('data', chunk => { body += chunk; if (body.length > 1024) body = body.slice(0, 1024); });
+    req.on('data', chunk => { body += chunk; if (body.length > 512 * 1024) body = body.slice(0, 512 * 1024); });
     req.on('end', () => resolve(body));
   });
 }
@@ -190,6 +205,12 @@ function parseFormBody(body) {
   return Object.fromEntries(
     body.split('&').map(pair => pair.split('=').map(s => decodeURIComponent(s.replace(/\+/g, ' '))))
   );
+}
+
+function json(res, code, obj) {
+  const body = JSON.stringify(obj);
+  res.writeHead(code, { 'Content-Type': 'application/json' });
+  res.end(body);
 }
 
 const server = http.createServer(async (req, res) => {
@@ -252,11 +273,75 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── API: GET /api/queue — return current queue ───────────────────────────
+  if (url === '/api/queue' && req.method === 'GET') {
+    json(res, 200, loadQueue());
+    return;
+  }
+
+  // ── API: POST /api/queue — merge new notifications into queue ────────────
+  if (url === '/api/queue' && req.method === 'POST') {
+    const raw = await parseBody(req);
+    let incoming;
+    try { incoming = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
+    if (!Array.isArray(incoming)) { json(res, 400, { error: 'expected array' }); return; }
+
+    const queue = loadQueue();
+
+    // Deduplicate: key by fireUTC. New entries overwrite old for same timestamp.
+    const map = new Map(queue.map(n => [n.fireUTC, n]));
+    for (const n of incoming) {
+      if (n.fireUTC) map.set(n.fireUTC, n);
+    }
+    const merged = Array.from(map.values()).sort((a, b) => a.fireUTC.localeCompare(b.fireUTC));
+    saveQueue(merged);
+    json(res, 200, { saved: merged.length, queue: merged });
+    return;
+  }
+
+  // ── API: DELETE /api/queue/future — remove future notifications ──────────
+  if (url === '/api/queue/future' && req.method === 'DELETE') {
+    const now = new Date().toISOString();
+    const queue = loadQueue();
+    const kept = queue.filter(n => n.fireUTC <= now);
+    saveQueue(kept);
+    json(res, 200, { deleted: queue.length - kept.length, queue: kept });
+    return;
+  }
+
+  // ── API: POST /api/push — push notifications to NTFY ────────────────────
+  if (url === '/api/push' && req.method === 'POST') {
+    const raw = await parseBody(req);
+    let incoming;
+    try { incoming = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
+    if (!Array.isArray(incoming)) { json(res, 400, { error: 'expected array' }); return; }
+
+    // 1. Merge into queue (same dedup logic)
+    const queue = loadQueue();
+    const map = new Map(queue.map(n => [n.fireUTC, n]));
+    for (const n of incoming) {
+      if (n.fireUTC) map.set(n.fireUTC, n);
+    }
+    const merged = Array.from(map.values()).sort((a, b) => a.fireUTC.localeCompare(b.fireUTC));
+    saveQueue(merged);
+
+    // 2. Push each notification to NTFY
+    let pushed = 0;
+    let failed = 0;
+    for (const n of incoming) {
+      const ok = await pushToNtfy(n);
+      if (ok) pushed++; else failed++;
+    }
+
+    console.log(`[NTFY] Pushed ${pushed}, failed ${failed} to ${NTFY_SERVER}/${NTFY_CHANNEL}`);
+    json(res, 200, { pushed, failed, queued: merged.length });
+    return;
+  }
+
   // ── Serve static files ───────────────────────────────────────────────────
   const safePath = url === '/' ? '/index.html' : url;
   const filePath = path.join(__dirname, safePath.replace(/\.\./g, ''));
 
-  // Only allow files inside the project directory
   if (!filePath.startsWith(__dirname)) {
     res.writeHead(403); res.end(); return;
   }
@@ -287,4 +372,5 @@ server.listen(PORT, () => {
   console.log(`Allowed IPs: ${ALLOWED_IPS.join(', ')}`);
   console.log(`Password: ${PASSWORD}`);
   console.log(`Session TTL: 8 hours`);
+  console.log(`NTFY: ${NTFY_SERVER}/${NTFY_CHANNEL}`);
 });

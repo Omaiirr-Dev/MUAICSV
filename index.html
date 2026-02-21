@@ -117,6 +117,7 @@
 
     .btn:hover { opacity: 0.85; }
     .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
     .btn-primary {
       background: var(--accent);
@@ -130,9 +131,24 @@
     }
 
     .btn-danger {
-      background: #7a2020;
-      color: #f0c0c0;
-      border: 1px solid #a03030;
+      background: #8a1818;
+      color: #f8c0c0;
+      border: 1px solid #c03030;
+    }
+
+    .btn-success {
+      background: #1a6b1a;
+      color: #c0f0c0;
+      border: 1px solid #30b030;
+    }
+
+    .btn-ntfy {
+      background: #8a1818;
+      color: #fff;
+      border: 1px solid #c03030;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
 
     /* Month info bar */
@@ -225,13 +241,8 @@
 
     tbody tr.row-fri:hover { background: #304020; }
 
-    tbody tr.row-sat {
-      background: #1a1a2a;
-    }
-
-    tbody tr.row-sun {
-      background: #1a1a2a;
-    }
+    tbody tr.row-sat { background: #1a1a2a; }
+    tbody tr.row-sun { background: #1a1a2a; }
 
     tbody td {
       padding: 9px 8px;
@@ -458,6 +469,199 @@
       overflow-y: auto;
       margin-top: 10px;
     }
+
+    /* ── Scheduled Notifications Section ── */
+    .sched-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .sched-header .sched-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .sched-header .sched-count {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .sched-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .sched-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      padding: 32px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+    }
+
+    /* Day row in scheduled list */
+    .sched-day {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .sched-day-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s;
+    }
+
+    .sched-day-header:hover {
+      background: #1c1c1c;
+    }
+
+    .sched-day.past .sched-day-header {
+      background: #0d1f0d;
+      border-left: 3px solid #2a7a2a;
+    }
+
+    .sched-day.past .sched-day-header:hover {
+      background: #112611;
+    }
+
+    .sched-day.future .sched-day-header {
+      background: #1f0d0d;
+      border-left: 3px solid #7a2a2a;
+    }
+
+    .sched-day.future .sched-day-header:hover {
+      background: #261111;
+    }
+
+    .sched-day-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .sched-day.past .sched-day-label { color: #70d870; }
+    .sched-day.future .sched-day-label { color: #e07070; }
+
+    .sched-day-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .sched-day-chevron {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: transform 0.18s;
+    }
+
+    .sched-day.open .sched-day-chevron {
+      transform: rotate(90deg);
+    }
+
+    .sched-day-body {
+      display: none;
+      padding: 10px 16px 14px;
+      background: #101010;
+      border-top: 1px solid var(--border);
+    }
+
+    .sched-day.open .sched-day-body {
+      display: block;
+    }
+
+    .sched-notif-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .sched-notif-row:last-child {
+      border-bottom: none;
+    }
+
+    .sched-notif-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      width: 24px;
+      text-align: center;
+    }
+
+    .sched-notif-info {
+      flex: 1;
+    }
+
+    .sched-notif-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .sched-notif-detail {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .sched-notif-time {
+      font-size: 0.75rem;
+      color: #555;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .sched-notif-time .utc {
+      display: block;
+      font-size: 0.68rem;
+      color: #444;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .status-dot.past { background: #30a830; }
+    .status-dot.future { background: #a83030; }
+
+    .push-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .push-bar .push-info {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .push-bar .push-info strong {
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
@@ -524,6 +728,7 @@
       <div class="section-title">Actions</div>
       <div class="actions-bar">
         <button class="btn btn-primary" id="preview-btn">👁 Preview Notifications</button>
+        <button class="btn btn-ntfy" id="push-ntfy-btn">🔴 PUSH TO NTFY</button>
         <button class="btn btn-secondary" id="raw-btn">Show Raw Parsed JSON</button>
       </div>
     </div>
@@ -536,7 +741,7 @@
           <thead>
             <tr>
               <th rowspan="2" style="min-width:44px;">Day</th>
-              <th rowspan="2" style="min-width:40px;">Sha'ban</th>
+              <th rowspan="2" style="min-width:40px;">Hijri</th>
               <th rowspan="2" style="min-width:60px;">Date</th>
               <th colspan="2" class="th-group th-fajr">Fajr</th>
               <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
@@ -578,6 +783,23 @@
 
   </div>
 
+  <!-- ── Scheduled Notifications Section ── -->
+  <div class="section" id="section-scheduled">
+    <div class="section-title">Scheduled Notifications Ready for NTFY</div>
+
+    <div class="sched-header">
+      <div>
+        <div class="sched-title">📅 Notification Queue</div>
+        <div class="sched-count" id="sched-count">Loading…</div>
+      </div>
+      <div class="sched-actions">
+        <button class="btn btn-danger" id="delete-future-btn">🗑 Delete All Future</button>
+      </div>
+    </div>
+
+    <div id="sched-list"></div>
+  </div>
+
 </div>
 
 <script>
@@ -586,11 +808,8 @@
 // ─────────────────────────────────────────────
 
 function parseCSV(text) {
-  // Normalise line endings
   const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
 
-  // Each line: split by comma, handling quoted fields (including embedded newlines
-  // that were already joined). Simple state-machine CSV parse.
   function splitLine(line) {
     const fields = [];
     let cur = '';
@@ -611,7 +830,6 @@ function parseCSV(text) {
     return fields;
   }
 
-  // First pass: re-join lines that are inside quotes (multi-line cells)
   const joinedLines = [];
   let buffer = '';
   let quoteCount = 0;
@@ -625,8 +843,7 @@ function parseCSV(text) {
   }
   if (buffer) joinedLines.push(buffer);
 
-  const rows = joinedLines.map(splitLine);
-  return rows;
+  return joinedLines.map(splitLine);
 }
 
 function extractMonthTitle(rows) {
@@ -637,7 +854,6 @@ function extractMonthTitle(rows) {
     'dhul qadah','dhul hijjah','rabi','jumada'
   ];
 
-  // First pass: look for a cell that contains a known Islamic month name
   for (const row of rows.slice(0, 8)) {
     for (const cell of row) {
       if (!cell) continue;
@@ -648,8 +864,6 @@ function extractMonthTitle(rows) {
     }
   }
 
-  // Second pass: look for standalone single-word cells that look like a month label
-  // (e.g. "Ramadan" on its own in a cell)
   for (const row of rows.slice(0, 8)) {
     for (const cell of row) {
       if (cell && cell.trim().length > 3 && !cell.includes(',') && !/\d/.test(cell)) {
@@ -663,7 +877,6 @@ function extractMonthTitle(rows) {
 }
 
 function findDataStart(rows) {
-  // Look for the row containing "Tue" or "Mon" etc in the day column (col index 1)
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   for (let i = 0; i < rows.length; i++) {
     if (days.includes(rows[i][1])) return i;
@@ -672,7 +885,6 @@ function findDataStart(rows) {
 }
 
 function resolveTime(value, lastValue) {
-  // `""` in CSV becomes empty string after parsing — means "same as above"
   if (!value || value === '' || value === '"') return lastValue;
   return value;
 }
@@ -691,15 +903,11 @@ function parsePrayerData(rows) {
   const GREG_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const GREG_MONTH_LOWER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 
-  // Match a cell value to a month index — handles full names ("February") and
-  // abbreviations ("Feb") by checking if any month name is contained in the cell.
   function matchMonth(cell) {
     const s = (cell || '').trim().toLowerCase();
     if (!s) return -1;
-    // Exact match first
     const exact = GREG_MONTH_LOWER.indexOf(s);
     if (exact !== -1) return exact;
-    // Full name contains abbreviation (e.g. "february" contains "feb")
     for (let i = 0; i < GREG_MONTH_LOWER.length; i++) {
       if (s.startsWith(GREG_MONTH_LOWER[i])) return i;
     }
@@ -708,9 +916,8 @@ function parsePrayerData(rows) {
 
   let runningMonth = -1;
   let runningYear  = new Date().getFullYear();
-  let runningDay   = 0;  // track the last seen Gregorian day number
+  let runningDay   = 0;
 
-  // ── 1. Scan header rows (before data) for the starting Gregorian month ──────
   for (let i = 0; i < dataStart; i++) {
     for (const cell of rows[i]) {
       const mi = matchMonth(cell);
@@ -719,15 +926,13 @@ function parsePrayerData(rows) {
     if (runningMonth !== -1) break;
   }
 
-  // ── 2. If not found in headers, find the FIRST month name in col 3 of data
-  //       rows and use (that month - 1) as the starting month ──────────────────
   if (runningMonth === -1) {
     for (let i = dataStart; i < rows.length; i++) {
       const cell = (rows[i][3] || '').trim();
       const mi = matchMonth(cell);
       if (mi !== -1) {
-        runningMonth = mi === 0 ? 11 : mi - 1; // month before the first named one
-        if (mi === 0) runningYear--;            // wrapped back a year
+        runningMonth = mi === 0 ? 11 : mi - 1;
+        if (mi === 0) runningYear--;
         break;
       }
     }
@@ -737,34 +942,27 @@ function parsePrayerData(rows) {
     const r = rows[i];
     const dayName = r[1];
 
-    // Non-day rows: check col 3 for a month name (handles mid-table month label rows)
     if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) {
       const mi = matchMonth(r[3]);
       if (mi !== -1) runningMonth = mi;
       continue;
     }
 
-    // Day row: col 3 is either a day number ("20"), a month name ("Mar") meaning
-    // it's day 1 of that month, or empty/ditto meaning increment from previous day.
     const gregRaw = (r[3] || '').trim();
     const gregMonthIdx = matchMonth(gregRaw);
 
     let gregDayNum;
     if (gregMonthIdx !== -1) {
-      // Month name in col D — this is day 1 of the new month
       runningMonth = gregMonthIdx;
       runningDay   = 1;
       gregDayNum   = 1;
     } else {
       const parsed = parseInt(gregRaw);
       if (!isNaN(parsed)) {
-        // Explicit day number
         gregDayNum = parsed;
         runningDay = parsed;
       } else {
-        // Empty / ditto — auto-increment from previous day
         runningDay++;
-        // Handle month overflow (e.g. Feb 28 → Feb 29/Mar 1)
         const daysInMonth = new Date(runningYear, runningMonth + 1, 0).getDate();
         if (runningDay > daysInMonth) {
           runningDay = 1;
@@ -777,6 +975,11 @@ function parsePrayerData(rows) {
 
     const gregMonthStr = GREG_MONTH_NAMES[runningMonth] || '?';
     const gregFull = `${dayName}, ${gregDayNum} ${gregMonthStr} ${runningYear}`;
+
+    // Store numeric date for UTC conversion
+    const gregYear  = runningYear;
+    const gregMonth = runningMonth; // 0-based
+    const gregDay   = gregDayNum;
 
     const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
     const zuhrJamat    = resolveTime(r[8],  last.zuhrJamat);
@@ -795,17 +998,20 @@ function parsePrayerData(rows) {
       hijriDate:     r[2] || '',
       gregDate:      gregRaw,
       gregFull:      gregFull,
+      gregYear,
+      gregMonth,
+      gregDay,
       fajrStart:     r[4] || '',
-      fajrJamat:     fajrJamat,
+      fajrJamat,
       sunrise:       r[6] || '',
       zuhrStart:     r[7] || '',
-      zuhrJamat:     zuhrJamat,
+      zuhrJamat,
       asrStart:      r[9] || '',
-      asrJamat:      asrJamat,
+      asrJamat,
       maghribAdhan:  r[11] || '',
-      maghribJamat:  maghribJamat,
+      maghribJamat,
       ishaStart:     r[13] || '',
-      ishaJamat:     ishaJamat,
+      ishaJamat,
     });
   }
 
@@ -815,7 +1021,7 @@ function parsePrayerData(rows) {
 }
 
 // ─────────────────────────────────────────────
-// NOTIFICATION BUILDER
+// TIME UTILITIES
 // ─────────────────────────────────────────────
 
 function timeTo24(t) {
@@ -825,22 +1031,11 @@ function timeTo24(t) {
   return { h: parseInt(parts[1]), m: parseInt(parts[2]) };
 }
 
-// Prayer times in the CSV are bare 12-hour values with no AM/PM.
-// We resolve them in order: each prayer must come after the previous one.
-// If a time's raw value is less than the previous prayer's hour, it has wrapped
-// past 12 — add 12 to convert it to 24h.
-function toMinutes(t) {
-  return t.h * 60 + t.m;
-}
-
 function resolveSequential(times) {
-  // times: array of {h, m} | null, in chronological prayer order
-  // Returns array of total-minutes values, adjusting for 12→PM wrap
   let prev = 0;
   return times.map(t => {
     if (!t) return null;
     let mins = t.h * 60 + t.m;
-    // If this time is before the previous (e.g. 2:48 after 12:23), add 12h
     if (mins < prev) mins += 12 * 60;
     prev = mins;
     return mins;
@@ -871,93 +1066,135 @@ function fmtTime(t) {
   return `${h}:${m} ${ampm}`;
 }
 
-const GREG_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+// Convert a prayer time string (e.g. "5:23") for a given calendar date to UTC ISO string.
+// Uses the same sequential unwrapping as resolveSequential.
+// minsResolved: the already-resolved total minutes (from resolveSequential)
+function resolvedMinsToUTC(gregYear, gregMonth, gregDay, resolvedMins) {
+  // resolvedMins may be > 1440 if wrap added 720; clamp to real hour/min
+  const totalMins = resolvedMins % (24 * 60);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
 
-function formatEngDate(day) {
-  // day.gregDate is e.g. "20", "Feb", "2" — we need to reconstruct a full English date.
-  // We rely on the fact that the table rows are rendered in order and gregDate is already
-  // resolved into a real value by the parser. Use hijriDate + gregDate + day name.
-  const greg = (day.gregDate || '').trim();
-  const month = isNaN(parseInt(greg)) ? greg : null; // "Feb" means it's a month label row
-  // Use the enriched gregFull field added by the parser
-  return day.gregFull || `${day.day} ${day.gregDate}`;
+  // Build a candidate UTC date assuming UK local = resolved H:MM on this calendar day.
+  // Use Intl to figure out the actual UTC offset for London on that date.
+  const guessUTC = Date.UTC(gregYear, gregMonth, gregDay, h, m, 0, 0);
+
+  const londonParts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(new Date(guessUTC));
+
+  const londonH = parseInt(londonParts.find(p => p.type === 'hour').value);
+  const londonM = parseInt(londonParts.find(p => p.type === 'minute').value);
+
+  const offsetMins = (londonH * 60 + londonM) - (h * 60 + m);
+  const utcMs = guessUTC - offsetMins * 60 * 1000;
+  return new Date(utcMs).toISOString();
 }
 
-function formatEngDateFull(dayName, gregFull) {
-  return `${dayName}, ${gregFull}`;
+// ─────────────────────────────────────────────
+// NOTIFICATION BUILDER
+// ─────────────────────────────────────────────
+
+function formatEngDate(day) {
+  return day.gregFull || `${day.day} ${day.gregDate}`;
 }
 
 function buildNotifications(day) {
   const notes = [];
 
-  const [fajrM, zuhrM, asrM, maghribM, ishaM] = resolveSequential([
+  const rawTimes = [
     timeTo24(day.fajrStart),
     timeTo24(day.zuhrStart),
     timeTo24(day.asrStart),
     timeTo24(day.maghribAdhan),
     timeTo24(day.ishaStart),
-  ]);
+  ];
 
-  // Each notification: prayer line + countdown to next prayer on the line below
+  const [fajrM, zuhrM, asrM, maghribM, ishaM] = resolveSequential(rawTimes);
+
+  function getFireUTC(resolvedMins) {
+    if (resolvedMins === null) return null;
+    return resolvedMinsToUTC(day.gregYear, day.gregMonth, day.gregDay, resolvedMins);
+  }
+
   const prayers = [
     {
       icon: '🕋',
-      line1: `Fajr has begun`,
+      title: `Fajr has begun`,
       details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '',
       countdown: formatDiff(minutesBetween(fajrM, zuhrM)),
       nextName: 'Zuhr',
       nextTime: fmtTime(day.zuhrStart),
-      fireTime: fmtTime(day.fajrStart),
+      fireTimeFmt: fmtTime(day.fajrStart),
+      fireUTC: getFireUTC(fajrM),
     },
     {
       icon: '☀️',
-      line1: `Zuhr has begun${day.day === 'Fri' ? ' · Jumu\'ah' : ''}`,
+      title: `Zuhr has begun${day.day === 'Fri' ? ' · Jumu\'ah' : ''}`,
       details: '',
       countdown: formatDiff(minutesBetween(zuhrM, asrM)),
       nextName: 'Asr',
       nextTime: fmtTime(day.asrStart),
-      fireTime: fmtTime(day.zuhrStart),
+      fireTimeFmt: fmtTime(day.zuhrStart),
+      fireUTC: getFireUTC(zuhrM),
     },
     {
       icon: '⛅',
-      line1: `Asr has begun`,
+      title: `Asr has begun`,
       details: '',
       countdown: formatDiff(minutesBetween(asrM, maghribM)),
       nextName: 'Maghrib',
       nextTime: fmtTime(day.maghribAdhan),
-      fireTime: fmtTime(day.asrStart),
+      fireTimeFmt: fmtTime(day.asrStart),
+      fireUTC: getFireUTC(asrM),
     },
     {
       icon: '🌅',
-      line1: `Maghrib has begun`,
+      title: `Maghrib has begun`,
       details: '',
       countdown: formatDiff(minutesBetween(maghribM, ishaM)),
       nextName: 'Isha',
       nextTime: fmtTime(day.ishaStart),
-      fireTime: fmtTime(day.maghribAdhan),
+      fireTimeFmt: fmtTime(day.maghribAdhan),
+      fireUTC: getFireUTC(maghribM),
     },
     {
       icon: '🌙',
-      line1: `Isha has begun`,
+      title: `Isha has begun`,
       details: '',
       countdown: null,
       nextName: null,
       nextTime: null,
-      fireTime: fmtTime(day.ishaStart),
+      fireTimeFmt: fmtTime(day.ishaStart),
+      fireUTC: getFireUTC(ishaM),
     },
   ];
 
   for (const p of prayers) {
     notes.push({
       icon: p.icon,
-      title: p.line1,
+      title: p.title,
       details: p.details,
       countdown: p.countdown ? `⏰ ${p.countdown} until ${p.nextName} · ${p.nextTime}` : null,
-      fireTime: p.fireTime,
+      fireTimeFmt: p.fireTimeFmt,
+      fireUTC: p.fireUTC,
+      priority: 'urgent',
+      gregFull: day.gregFull,
     });
   }
 
   return notes;
+}
+
+function buildAllNotifications(data) {
+  const all = [];
+  for (const day of data.days) {
+    for (const n of buildNotifications(day)) {
+      all.push(n);
+    }
+  }
+  return all;
 }
 
 // ─────────────────────────────────────────────
@@ -1044,7 +1281,7 @@ function renderNotificationPreview(data, filterDay = 'all') {
       card.innerHTML = `
         <div class="notif-icon">${n.icon}</div>
         <div class="notif-body">
-          <div class="notif-firetime">${engDate} · ${n.fireTime}</div>
+          <div class="notif-firetime">${engDate} · ${n.fireTimeFmt} · <span style="color:#6a4;">URGENT</span></div>
           <div class="notif-title">${n.title}</div>
           ${n.details ? `<div class="notif-sub">${n.details}</div>` : ''}
           ${n.countdown ? `<div class="notif-countdown">${n.countdown}</div>` : ''}
@@ -1105,6 +1342,118 @@ function handleCSVText(text) {
   } catch (err) {
     showAlert(`Parse error: ${err.message}`, 'error');
     console.error(err);
+  }
+}
+
+// ─────────────────────────────────────────────
+// SCHEDULED NOTIFICATIONS SECTION
+// ─────────────────────────────────────────────
+
+// Group notifications by date (gregFull)
+function groupByDay(queue) {
+  const map = new Map();
+  for (const n of queue) {
+    const key = n.gregFull || n.fireUTC?.slice(0, 10) || 'Unknown';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(n);
+  }
+  return map;
+}
+
+function fmtUTCForDisplay(isoStr) {
+  if (!isoStr) return '—';
+  const d = new Date(isoStr);
+  return d.toLocaleString('en-GB', {
+    timeZone: 'Europe/London',
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }) + ' (UK)';
+}
+
+function fmtUTCShort(isoStr) {
+  if (!isoStr) return '—';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('en-GB', {
+    timeZone: 'Europe/London',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+}
+
+function renderScheduled(queue) {
+  const list = document.getElementById('sched-list');
+  const countEl = document.getElementById('sched-count');
+  const nowISO = new Date().toISOString();
+
+  if (!queue || queue.length === 0) {
+    countEl.textContent = '0 notifications in queue';
+    list.innerHTML = `<div class="sched-empty">No notifications scheduled yet.<br><small style="color:#444;margin-top:6px;display:block;">Upload a CSV and press PUSH TO NTFY to schedule.</small></div>`;
+    return;
+  }
+
+  const futureCount = queue.filter(n => (n.fireUTC || '') > nowISO).length;
+  const pastCount   = queue.length - futureCount;
+  countEl.textContent = `${queue.length} total · ${futureCount} upcoming · ${pastCount} past`;
+
+  const grouped = groupByDay(queue);
+  list.innerHTML = '';
+
+  for (const [dayLabel, notifs] of grouped) {
+    // Determine past/future: use first notification's fireUTC
+    const firstUTC = notifs[0]?.fireUTC || '';
+    const isPast = firstUTC && firstUTC <= nowISO;
+
+    const dayDiv = document.createElement('div');
+    dayDiv.className = `sched-day ${isPast ? 'past' : 'future'}`;
+
+    const header = document.createElement('div');
+    header.className = 'sched-day-header';
+    header.innerHTML = `
+      <div class="status-dot ${isPast ? 'past' : 'future'}"></div>
+      <div class="sched-day-label">${dayLabel}</div>
+      <div class="sched-day-meta">${notifs.length} notifications · ${isPast ? '✓ Sent / Past' : '⏳ Upcoming'}</div>
+      <div class="sched-day-chevron">▶</div>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'sched-day-body';
+
+    for (const n of notifs) {
+      const row = document.createElement('div');
+      row.className = 'sched-notif-row';
+      const msgLines = [n.details, n.countdown].filter(Boolean).join(' · ');
+      row.innerHTML = `
+        <div class="sched-notif-icon">${n.icon || '🔔'}</div>
+        <div class="sched-notif-info">
+          <div class="sched-notif-title">${n.title}</div>
+          ${msgLines ? `<div class="sched-notif-detail">${msgLines}</div>` : ''}
+        </div>
+        <div class="sched-notif-time">
+          ${n.fireTimeFmt || '—'}
+          <span class="utc">${n.fireUTC ? new Date(n.fireUTC).toISOString().slice(0,16).replace('T',' ') + ' UTC' : ''}</span>
+        </div>
+      `;
+      body.appendChild(row);
+    }
+
+    header.addEventListener('click', () => {
+      dayDiv.classList.toggle('open');
+    });
+
+    dayDiv.appendChild(header);
+    dayDiv.appendChild(body);
+    list.appendChild(dayDiv);
+  }
+}
+
+async function fetchAndRenderQueue() {
+  try {
+    const resp = await fetch('/api/queue');
+    if (!resp.ok) throw new Error('Failed to load queue');
+    const queue = await resp.json();
+    renderScheduled(queue);
+  } catch (e) {
+    document.getElementById('sched-count').textContent = 'Error loading queue';
+    console.error(e);
   }
 }
 
@@ -1175,6 +1524,75 @@ document.getElementById('raw-btn').addEventListener('click', () => {
     panel.classList.add('hidden');
   }
 });
+
+// PUSH TO NTFY
+document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
+  if (!parsedData) { showAlert('No CSV loaded — nothing to push.', 'error'); return; }
+
+  const btn = document.getElementById('push-ntfy-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Pushing…';
+
+  try {
+    const notifications = buildAllNotifications(parsedData);
+
+    // Filter out notifications with no fireUTC (missing time data)
+    const valid = notifications.filter(n => n.fireUTC);
+    if (valid.length === 0) {
+      showAlert('No valid fire times found — cannot push.', 'error');
+      return;
+    }
+
+    const resp = await fetch('/api/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(valid),
+    });
+
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+    const result = await resp.json();
+
+    showAlert(
+      `✓ Pushed ${result.pushed} notifications to NTFY · ${result.failed} failed · Queue now has ${result.queued} total`,
+      result.failed > 0 ? 'info' : 'success'
+    );
+
+    // Refresh the scheduled section
+    await fetchAndRenderQueue();
+
+    // Scroll to scheduled section
+    document.getElementById('section-scheduled').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (e) {
+    showAlert(`Push failed: ${e.message}`, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔴 PUSH TO NTFY';
+  }
+});
+
+// Delete all future notifications
+document.getElementById('delete-future-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('delete-future-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Deleting…';
+  try {
+    const resp = await fetch('/api/queue/future', { method: 'DELETE' });
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+    const result = await resp.json();
+    showAlert(`✓ Deleted ${result.deleted} future notifications. ${result.queue.length} past notifications remain.`, 'success');
+    await fetchAndRenderQueue();
+  } catch (e) {
+    showAlert(`Delete failed: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🗑 Delete All Future';
+  }
+});
+
+// Load queue on page start
+fetchAndRenderQueue();
 </script>
 </body>
 </html>
