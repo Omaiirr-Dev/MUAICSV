@@ -343,6 +343,14 @@
       font-weight: 600;
     }
 
+    .notif-firetime {
+      font-size: 0.7rem;
+      color: #555;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
     /* Day filter tabs */
     .day-filter {
       display: flex;
@@ -496,10 +504,18 @@
         <div class="stats">
           <span><strong id="stat-days">0</strong> days</span>
           <span><strong id="stat-fri">0</strong> Fridays</span>
-          <span><strong id="stat-start">—</strong> start date</span>
-          <span><strong id="stat-end">—</strong> end date</span>
         </div>
         <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">✕ Clear</button>
+      </div>
+      <div class="date-range-bar" id="date-range-bar" style="margin-top:10px;background:#111;border:1px solid #2a2a2a;border-radius:7px;padding:11px 18px;font-size:0.82rem;color:#aaa;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="color:#555">Notifications scheduled:</span>
+        <span id="stat-start-eng" style="color:#e8e8e8;font-weight:600;">—</span>
+        <span style="color:#444">→</span>
+        <span id="stat-end-eng" style="color:#e8e8e8;font-weight:600;">—</span>
+        <span style="color:#555;margin-left:8px;">·</span>
+        <span id="stat-total-notifs" style="color:#c9a84c;font-weight:700;">0 notifications</span>
+        <span style="color:#555;">across</span>
+        <span id="stat-days2" style="color:#c9a84c;font-weight:700;">0 days</span>
       </div>
     </div>
 
@@ -649,13 +665,36 @@ function parsePrayerData(rows) {
     maghribJamat: '', ishaJamat: ''
   };
 
+  // Running Gregorian date tracker so we know the real calendar date of each row
+  const GREG_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let runningMonth = -1;  // unknown until we see a month name in col 3
+  let runningYear  = new Date().getFullYear();
+
   for (let i = dataStart; i < rows.length; i++) {
     const r = rows[i];
-    // Columns (0-indexed): 0=empty, 1=Day, 2=Sha'ban, 3=Greg, 4=FajrStart, 5=FajrJamat,
-    // 6=Sunrise, 7=ZuhrStart, 8=ZuhrJamat, 9=AsrStart, 10=AsrJamat,
-    // 11=MaghribAdhan, 12=MaghribJamat, 13=IshaStart, 14=IshaJamat
     const dayName = r[1];
-    if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) continue;
+    if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) {
+      // Check if col 3 has a month name to update running month
+      const g = (r[3] || '').trim().toLowerCase();
+      const mi = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(g);
+      if (mi !== -1) runningMonth = mi;
+      continue;
+    }
+
+    // Resolve Gregorian date from col 3
+    const gregRaw = (r[3] || '').trim();
+    const gregMonthIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(gregRaw.toLowerCase());
+    if (gregMonthIdx !== -1) {
+      runningMonth = gregMonthIdx;
+    } else {
+      const dayNum = parseInt(gregRaw);
+      if (!isNaN(dayNum) && runningMonth === -1) runningMonth = 0; // fallback
+    }
+    const gregDayNum = parseInt(gregRaw);
+    const gregMonthStr = GREG_MONTH_NAMES[runningMonth] || '?';
+    const gregFull = isNaN(gregDayNum)
+      ? `${dayName}, 1 ${gregMonthStr} ${runningYear}`   // row where col3 is the month name itself
+      : `${dayName}, ${gregDayNum} ${gregMonthStr} ${runningYear}`;
 
     const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
     const zuhrJamat    = resolveTime(r[8],  last.zuhrJamat);
@@ -672,7 +711,8 @@ function parsePrayerData(rows) {
     days.push({
       day:           dayName,
       hijriDate:     r[2] || '',
-      gregDate:      r[3] || '',
+      gregDate:      gregRaw,
+      gregFull:      gregFull,
       fajrStart:     r[4] || '',
       fajrJamat:     fajrJamat,
       sunrise:       r[6] || '',
@@ -749,6 +789,22 @@ function fmtTime(t) {
   return `${h}:${m} ${ampm}`;
 }
 
+const GREG_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatEngDate(day) {
+  // day.gregDate is e.g. "20", "Feb", "2" — we need to reconstruct a full English date.
+  // We rely on the fact that the table rows are rendered in order and gregDate is already
+  // resolved into a real value by the parser. Use hijriDate + gregDate + day name.
+  const greg = (day.gregDate || '').trim();
+  const month = isNaN(parseInt(greg)) ? greg : null; // "Feb" means it's a month label row
+  // Use the enriched gregFull field added by the parser
+  return day.gregFull || `${day.day} ${day.gregDate}`;
+}
+
+function formatEngDateFull(dayName, gregFull) {
+  return `${dayName}, ${gregFull}`;
+}
+
 function buildNotifications(day) {
   const notes = [];
 
@@ -769,6 +825,7 @@ function buildNotifications(day) {
       countdown: formatDiff(minutesBetween(fajrM, zuhrM)),
       nextName: 'Zuhr',
       nextTime: fmtTime(day.zuhrStart),
+      fireTime: fmtTime(day.fajrStart),
     },
     {
       icon: '☀️',
@@ -777,6 +834,7 @@ function buildNotifications(day) {
       countdown: formatDiff(minutesBetween(zuhrM, asrM)),
       nextName: 'Asr',
       nextTime: fmtTime(day.asrStart),
+      fireTime: fmtTime(day.zuhrStart),
     },
     {
       icon: '⛅',
@@ -785,6 +843,7 @@ function buildNotifications(day) {
       countdown: formatDiff(minutesBetween(asrM, maghribM)),
       nextName: 'Maghrib',
       nextTime: fmtTime(day.maghribAdhan),
+      fireTime: fmtTime(day.asrStart),
     },
     {
       icon: '🌅',
@@ -793,6 +852,7 @@ function buildNotifications(day) {
       countdown: formatDiff(minutesBetween(maghribM, ishaM)),
       nextName: 'Isha',
       nextTime: fmtTime(day.ishaStart),
+      fireTime: fmtTime(day.maghribAdhan),
     },
     {
       icon: '🌙',
@@ -801,6 +861,7 @@ function buildNotifications(day) {
       countdown: null,
       nextName: null,
       nextTime: null,
+      fireTime: fmtTime(day.ishaStart),
     },
   ];
 
@@ -810,6 +871,7 @@ function buildNotifications(day) {
       title: p.line1,
       details: p.details,
       countdown: p.countdown ? `⏰ ${p.countdown} until ${p.nextName} · ${p.nextTime}` : null,
+      fireTime: p.fireTime,
     });
   }
 
@@ -874,8 +936,10 @@ function renderMonthBar(data) {
   document.getElementById('stat-fri').textContent   = data.days.filter(d => d.day === 'Fri').length;
   const first = data.days[0];
   const last  = data.days[data.days.length - 1];
-  document.getElementById('stat-start').textContent = `${first.day} ${first.hijriDate} (${first.gregDate})`;
-  document.getElementById('stat-end').textContent   = `${last.day} ${last.hijriDate} (${last.gregDate})`;
+  document.getElementById('stat-start-eng').textContent = first.gregFull || `${first.day} ${first.gregDate}`;
+  document.getElementById('stat-end-eng').textContent   = last.gregFull  || `${last.day} ${last.gregDate}`;
+  document.getElementById('stat-total-notifs').textContent = `${data.days.length * 5} notifications`;
+  document.getElementById('stat-days2').textContent = `${data.days.length} days`;
 }
 
 function renderNotificationPreview(data, filterDay = 'all') {
@@ -889,7 +953,8 @@ function renderNotificationPreview(data, filterDay = 'all') {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'notif-day';
 
-    dayDiv.innerHTML = `<div class="notif-day-header">${day.day} · Sha'ban ${day.hijriDate} · ${day.gregDate}</div>`;
+    const engDate = formatEngDate(day);
+    dayDiv.innerHTML = `<div class="notif-day-header">${engDate}</div>`;
 
     for (const n of notes) {
       const card = document.createElement('div');
@@ -897,6 +962,7 @@ function renderNotificationPreview(data, filterDay = 'all') {
       card.innerHTML = `
         <div class="notif-icon">${n.icon}</div>
         <div class="notif-body">
+          <div class="notif-firetime">${engDate} · ${n.fireTime}</div>
           <div class="notif-title">${n.title}</div>
           ${n.details ? `<div class="notif-sub">${n.details}</div>` : ''}
           ${n.countdown ? `<div class="notif-countdown">${n.countdown}</div>` : ''}
