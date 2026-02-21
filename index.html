@@ -708,6 +708,7 @@ function parsePrayerData(rows) {
 
   let runningMonth = -1;
   let runningYear  = new Date().getFullYear();
+  let runningDay   = 0;  // track the last seen Gregorian day number
 
   // ── 1. Scan header rows (before data) for the starting Gregorian month ──────
   for (let i = 0; i < dataStart; i++) {
@@ -743,19 +744,39 @@ function parsePrayerData(rows) {
       continue;
     }
 
-    // Day row: col 3 is either a day number ("20") or a month name ("Mar") on
-    // the first day of a new month.
+    // Day row: col 3 is either a day number ("20"), a month name ("Mar") meaning
+    // it's day 1 of that month, or empty/ditto meaning increment from previous day.
     const gregRaw = (r[3] || '').trim();
     const gregMonthIdx = matchMonth(gregRaw);
+
+    let gregDayNum;
     if (gregMonthIdx !== -1) {
+      // Month name in col D — this is day 1 of the new month
       runningMonth = gregMonthIdx;
+      runningDay   = 1;
+      gregDayNum   = 1;
+    } else {
+      const parsed = parseInt(gregRaw);
+      if (!isNaN(parsed)) {
+        // Explicit day number
+        gregDayNum = parsed;
+        runningDay = parsed;
+      } else {
+        // Empty / ditto — auto-increment from previous day
+        runningDay++;
+        // Handle month overflow (e.g. Feb 28 → Feb 29/Mar 1)
+        const daysInMonth = new Date(runningYear, runningMonth + 1, 0).getDate();
+        if (runningDay > daysInMonth) {
+          runningDay = 1;
+          runningMonth = (runningMonth + 1) % 12;
+          if (runningMonth === 0) runningYear++;
+        }
+        gregDayNum = runningDay;
+      }
     }
 
-    const gregDayNum = parseInt(gregRaw);
     const gregMonthStr = GREG_MONTH_NAMES[runningMonth] || '?';
-    const gregFull = isNaN(gregDayNum)
-      ? `${dayName}, 1 ${gregMonthStr} ${runningYear}`
-      : `${dayName}, ${gregDayNum} ${gregMonthStr} ${runningYear}`;
+    const gregFull = `${dayName}, ${gregDayNum} ${gregMonthStr} ${runningYear}`;
 
     const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
     const zuhrJamat    = resolveTime(r[8],  last.zuhrJamat);
