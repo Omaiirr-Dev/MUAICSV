@@ -528,6 +528,7 @@
       background: #1c1c1c;
     }
 
+    /* green = past/fired */
     .sched-day.past .sched-day-header {
       background: #0d1f0d;
       border-left: 3px solid #2a7a2a;
@@ -537,13 +538,14 @@
       background: #112611;
     }
 
-    .sched-day.future .sched-day-header {
-      background: #1f0d0d;
-      border-left: 3px solid #7a2a2a;
+    /* orange = upcoming, pushed and scheduled in NTFY */
+    .sched-day.upcoming .sched-day-header {
+      background: #1f1600;
+      border-left: 3px solid #a06000;
     }
 
-    .sched-day.future .sched-day-header:hover {
-      background: #261111;
+    .sched-day.upcoming .sched-day-header:hover {
+      background: #261c00;
     }
 
     .sched-day-label {
@@ -553,8 +555,8 @@
       flex: 1;
     }
 
-    .sched-day.past .sched-day-label { color: #70d870; }
-    .sched-day.future .sched-day-label { color: #e07070; }
+    .sched-day.past .sched-day-label     { color: #70d870; }
+    .sched-day.upcoming .sched-day-label { color: #e0a030; }
 
     .sched-day-meta {
       font-size: 0.75rem;
@@ -638,8 +640,8 @@
       margin-top: 5px;
     }
 
-    .status-dot.past { background: #30a830; }
-    .status-dot.future { background: #a83030; }
+    .status-dot.past     { background: #30a830; }
+    .status-dot.upcoming { background: #c07820; }
 
     .push-bar {
       background: var(--surface);
@@ -1397,9 +1399,9 @@ function renderScheduled(queue) {
     return;
   }
 
-  const futureCount = queue.filter(n => (n.fireUTC || '') > nowISO).length;
-  const pastCount   = queue.length - futureCount;
-  countEl.textContent = `${queue.length} total · ${futureCount} upcoming · ${pastCount} past`;
+  const upcomingCount = queue.filter(n => (n.fireUTC || '') > nowISO).length;
+  const pastCount     = queue.length - upcomingCount;
+  countEl.textContent = `${queue.length} total · 🟠 ${upcomingCount} scheduled in NTFY · 🟢 ${pastCount} already fired`;
 
   const grouped = groupByDay(queue);
   list.innerHTML = '';
@@ -1408,16 +1410,18 @@ function renderScheduled(queue) {
     // Determine past/future: use first notification's fireUTC
     const firstUTC = notifs[0]?.fireUTC || '';
     const isPast = firstUTC && firstUTC <= nowISO;
+    const stateClass = isPast ? 'past' : 'upcoming';
+    const stateLabel = isPast ? '✓ Already fired' : '⏳ Scheduled — queued in NTFY';
 
     const dayDiv = document.createElement('div');
-    dayDiv.className = `sched-day ${isPast ? 'past' : 'future'}`;
+    dayDiv.className = `sched-day ${stateClass}`;
 
     const header = document.createElement('div');
     header.className = 'sched-day-header';
     header.innerHTML = `
-      <div class="status-dot ${isPast ? 'past' : 'future'}"></div>
+      <div class="status-dot ${stateClass}"></div>
       <div class="sched-day-label">${dayLabel}</div>
-      <div class="sched-day-meta">${notifs.length} notifications · ${isPast ? '✓ Sent / Past' : '⏳ Upcoming'}</div>
+      <div class="sched-day-meta">${notifs.length} notifications · ${stateLabel}</div>
       <div class="sched-day-chevron">▶</div>
     `;
 
