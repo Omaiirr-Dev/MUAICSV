@@ -665,35 +665,47 @@ function parsePrayerData(rows) {
     maghribJamat: '', ishaJamat: ''
   };
 
-  // Running Gregorian date tracker so we know the real calendar date of each row
   const GREG_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  let runningMonth = -1;  // unknown until we see a month name in col 3
+  const GREG_MONTH_LOWER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+  // ── Scan the header rows (before data) to find the starting month ──────────
+  // The CSV has a column header like "January" in col 3 of the header section.
+  let runningMonth = -1;
   let runningYear  = new Date().getFullYear();
+
+  for (let i = 0; i < dataStart; i++) {
+    for (const cell of rows[i]) {
+      const mi = GREG_MONTH_LOWER.indexOf((cell || '').trim().toLowerCase());
+      if (mi !== -1) { runningMonth = mi; break; }
+    }
+    if (runningMonth !== -1) break;
+  }
 
   for (let i = dataStart; i < rows.length; i++) {
     const r = rows[i];
     const dayName = r[1];
+
+    // Non-day rows: check every cell for a month name (handles mid-table "Feb" rows)
     if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) {
-      // Check if col 3 has a month name to update running month
-      const g = (r[3] || '').trim().toLowerCase();
-      const mi = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(g);
-      if (mi !== -1) runningMonth = mi;
+      for (const cell of r) {
+        const mi = GREG_MONTH_LOWER.indexOf((cell || '').trim().toLowerCase());
+        if (mi !== -1) { runningMonth = mi; break; }
+      }
       continue;
     }
 
-    // Resolve Gregorian date from col 3
+    // Day row: col 3 is either a day number ("20") or a month name ("Feb") on
+    // the first day of a new month.
     const gregRaw = (r[3] || '').trim();
-    const gregMonthIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(gregRaw.toLowerCase());
+    const gregMonthIdx = GREG_MONTH_LOWER.indexOf(gregRaw.toLowerCase());
     if (gregMonthIdx !== -1) {
       runningMonth = gregMonthIdx;
-    } else {
-      const dayNum = parseInt(gregRaw);
-      if (!isNaN(dayNum) && runningMonth === -1) runningMonth = 0; // fallback
     }
+
     const gregDayNum = parseInt(gregRaw);
     const gregMonthStr = GREG_MONTH_NAMES[runningMonth] || '?';
     const gregFull = isNaN(gregDayNum)
-      ? `${dayName}, 1 ${gregMonthStr} ${runningYear}`   // row where col3 is the month name itself
+      ? `${dayName}, 1 ${gregMonthStr} ${runningYear}`
       : `${dayName}, ${gregDayNum} ${gregMonthStr} ${runningYear}`;
 
     const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
