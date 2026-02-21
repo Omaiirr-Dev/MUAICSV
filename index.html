@@ -876,10 +876,17 @@ function extractMonthTitle(rows) {
   return 'Birmingham Prayer Times';
 }
 
+const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function normaliseDay(cell) {
+  if (!cell) return '';
+  const s = cell.trim().toLowerCase();
+  return DAY_NAMES.find(d => d.toLowerCase() === s) || '';
+}
+
 function findDataStart(rows) {
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   for (let i = 0; i < rows.length; i++) {
-    if (days.includes(rows[i][1])) return i;
+    if (normaliseDay(rows[i][1])) return i;
   }
   return -1;
 }
@@ -940,9 +947,9 @@ function parsePrayerData(rows) {
 
   for (let i = dataStart; i < rows.length; i++) {
     const r = rows[i];
-    const dayName = r[1];
+    const dayName = normaliseDay(r[1]);
 
-    if (!dayName || !['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].includes(dayName)) {
+    if (!dayName) {
       const mi = matchMonth(r[3]);
       if (mi !== -1) runningMonth = mi;
       continue;
@@ -1305,7 +1312,7 @@ function renderDayFilterTabs(data) {
   allTab.dataset.day = 'all';
   tabs.appendChild(allTab);
 
-  for (const d of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']) {
+  for (const d of DAY_NAMES) {
     if (uniqueDays.includes(d)) {
       const tab = document.createElement('div');
       tab.className = 'day-tab';
