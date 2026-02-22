@@ -359,12 +359,13 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-5-mini',
+          model: 'gpt-5-chat-latest',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: body.csv },
           ],
-          max_completion_tokens: 16000,
+          temperature: 0,
+          max_tokens: 16000,
         }),
       });
 
@@ -395,7 +396,7 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
         return;
       }
 
-      console.log(`[AI] Parsed ${parsed.days.length} days from CSV (model: gpt-5-mini)`);
+      console.log(`[AI] Parsed ${parsed.days.length} days from CSV (model: gpt-5-chat-latest)`);
       json(res, 200, parsed);
     } catch (e) {
       console.error('[AI] Error:', e.message);
