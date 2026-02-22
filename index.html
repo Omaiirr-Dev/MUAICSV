@@ -65,19 +65,25 @@
 
     /* Upload zone */
     .upload-zone {
-      border: 2px dashed var(--border);
+      border: 2px dashed #5a2020;
       border-radius: 10px;
       padding: 40px;
       text-align: center;
-      background: var(--surface);
+      background: #1a0e0e;
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
       position: relative;
     }
 
     .upload-zone:hover, .upload-zone.drag-over {
       border-color: var(--accent);
       background: #1a1600;
+    }
+
+    .upload-zone.accepted {
+      border-color: #2a7a2a;
+      border-style: solid;
+      background: #0d1f0d;
     }
 
     .upload-zone input[type="file"] {
@@ -87,6 +93,7 @@
       cursor: pointer;
       width: 100%;
       height: 100%;
+      pointer-events: none;
     }
 
     .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
@@ -667,24 +674,25 @@
 
     /* ── Parse Mode Chooser ─────────────────────────────────── */
     .parse-chooser {
-      display: flex; gap: 14px; margin-top: 14px;
+      display: flex; gap: 10px; margin-top: 10px;
     }
     .parse-option {
-      flex: 1; background: #111; border: 1px solid var(--border); border-radius: 10px;
-      padding: 20px; cursor: pointer; text-align: center; transition: all 0.15s;
+      flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px;
+      padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+      transition: all 0.15s;
     }
-    .parse-option:hover { border-color: #444; background: #161616; }
-    .parse-option-icon { font-size: 1.8rem; margin-bottom: 8px; }
-    .parse-option-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .parse-option-desc { font-size: 0.75rem; color: #666; }
-    .parse-option.ai { border-color: #3a3020; }
-    .parse-option.ai:hover { border-color: var(--accent); background: #1a1608; }
+    .parse-option:hover { border-color: #555; background: #1a1a1a; }
+    .parse-option-icon { font-size: 1rem; flex-shrink: 0; }
+    .parse-option-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .parse-option-desc { font-size: 0.72rem; color: #555; margin-top: 1px; }
+    .parse-option.ai { border-color: #2a2418; }
+    .parse-option.ai:hover { border-color: var(--accent-dim); background: #151208; }
     .parse-option.ai .parse-option-title { color: var(--accent); }
     .parse-loading {
-      text-align: center; padding: 30px; color: #888; font-size: 0.9rem;
+      text-align: center; padding: 20px; color: #888; font-size: 0.85rem;
     }
     .parse-loading .spinner {
-      display: inline-block; width: 20px; height: 20px; border: 2px solid #333;
+      display: inline-block; width: 16px; height: 16px; border: 2px solid #333;
       border-top-color: var(--accent); border-radius: 50%;
       animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle;
     }
@@ -727,13 +735,17 @@
     <div class="parse-chooser">
       <div class="parse-option" id="parse-script">
         <div class="parse-option-icon">⚡</div>
-        <div class="parse-option-title">Script Parse</div>
-        <div class="parse-option-desc">Built-in parser for standard MUAI format. Instant &amp; free.</div>
+        <div>
+          <div class="parse-option-title">Script Parse</div>
+          <div class="parse-option-desc">Standard MUAI format</div>
+        </div>
       </div>
       <div class="parse-option ai hidden" id="parse-ai">
         <div class="parse-option-icon">🤖</div>
-        <div class="parse-option-title">AI Parse</div>
-        <div class="parse-option-desc">Uses AI to extract prayer times from any format.</div>
+        <div>
+          <div class="parse-option-title">AI Parse</div>
+          <div class="parse-option-desc">Any CSV format</div>
+        </div>
       </div>
     </div>
     <div id="parse-loading" class="parse-loading hidden">
@@ -1560,28 +1572,46 @@ async function fetchAndRenderQueue() {
 // EVENT WIRING
 // ─────────────────────────────────────────────
 
-// File input
-document.getElementById('csv-file').addEventListener('change', e => {
+// File input (click-to-browse)
+const fileInput = document.getElementById('csv-file');
+const dropZone = document.getElementById('drop-zone');
+
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => handleCSVText(ev.target.result);
+  reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
   reader.readAsText(file);
 });
 
-// Drag & drop
-const dropZone = document.getElementById('drop-zone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+// Drag & drop — handle on the zone div (input has pointer-events:none)
+dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over'); });
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
+  e.stopPropagation();
   dropZone.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => handleCSVText(ev.target.result);
+  reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
   reader.readAsText(file);
 });
+
+function markAccepted(filename) {
+  dropZone.classList.add('accepted');
+  dropZone.querySelector('.upload-icon').textContent = '✅';
+  dropZone.querySelector('h2').textContent = filename;
+  dropZone.querySelector('p').textContent = 'File loaded — choose a parse method below';
+}
+
+function resetDropZone() {
+  dropZone.classList.remove('accepted');
+  dropZone.querySelector('.upload-icon').textContent = '📄';
+  dropZone.querySelector('h2').textContent = 'Drop your prayer times CSV here';
+  dropZone.querySelector('p').textContent = 'or click to browse \u00b7 Accepts MUAI Birmingham format';
+}
 
 // Paste toggle
 document.getElementById('paste-toggle').addEventListener('click', () => {
@@ -1591,6 +1621,7 @@ document.getElementById('paste-toggle').addEventListener('click', () => {
 document.getElementById('parse-paste-btn').addEventListener('click', () => {
   const text = document.getElementById('csv-paste').value;
   if (!text.trim()) { showAlert('Nothing pasted yet.', 'error'); return; }
+  markAccepted('Pasted CSV');
   handleCSVText(text);
 });
 
@@ -1602,6 +1633,7 @@ document.getElementById('clear-btn').addEventListener('click', () => {
   document.getElementById('parse-chooser-wrap').classList.add('hidden');
   document.getElementById('csv-file').value = '';
   document.getElementById('csv-paste').value = '';
+  resetDropZone();
 });
 
 // Preview notifications
