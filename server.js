@@ -86,6 +86,15 @@ function saveQueue(queue) {
   fs.writeFileSync(QUEUE_FILE, JSON.stringify(queue, null, 2), 'utf8');
 }
 
+// ─── NTFY SCHEDULING HELPERS ─────────────────────────────────────────────────
+const NTFY_WINDOW_MS = 72 * 60 * 60 * 1000; // 3 days — ntfy.sh free tier limit
+
+function isWithinNtfyWindow(fireUTC) {
+  const fireMs = new Date(fireUTC).getTime();
+  const now    = Date.now();
+  return fireMs > now && fireMs <= now + NTFY_WINDOW_MS;
+}
+
 // ─── NTFY PUSH ────────────────────────────────────────────────────────────────
 // Posts JSON to the ntfy ROOT endpoint (not the topic URL) — posting JSON to
 // the topic URL causes ntfy to treat the body as a file attachment.
@@ -335,29 +344,40 @@ const server = http.createServer(async (req, res) => {
     try { incoming = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
     if (!Array.isArray(incoming)) { json(res, 400, { error: 'expected array' }); return; }
 
-    // 1. Merge into queue (same dedup logic)
+    // 1. Merge into queue — preserve pushedToNtfy flag if content unchanged
     const queue = loadQueue();
     const map = new Map(queue.map(n => [n.fireUTC, n]));
     for (const n of incoming) {
-      if (n.fireUTC) map.set(n.fireUTC, n);
+      if (!n.fireUTC) continue;
+      const existing = map.get(n.fireUTC);
+      // Keep pushedToNtfy if title+message unchanged (same notification re-uploaded)
+      if (existing && existing.pushedToNtfy &&
+          existing.title === n.title && existing.details === n.details) {
+        n.pushedToNtfy = true;
+      }
+      map.set(n.fireUTC, n);
     }
-    const merged = Array.from(map.values()).sort((a, b) => a.fireUTC.localeCompare(b.fireUTC));
+    const merged = Array.from(map.values()).sort((a, b) => (a.fireUTC || '').localeCompare(b.fireUTC || ''));
     saveQueue(merged);
 
-    // 2. Push only FUTURE notifications to NTFY (past ones stay in queue for display)
+    // 2. Push only notifications within the 3-day ntfy window that haven't been pushed yet
     const nowISO = new Date().toISOString();
-    const future = incoming.filter(n => n.fireUTC && n.fireUTC > nowISO);
-    const skipped = incoming.length - future.length;
+    const pastCount = incoming.filter(n => !n.fireUTC || n.fireUTC <= nowISO).length;
+    const toPush = incoming.filter(n => n.fireUTC && isWithinNtfyWindow(n.fireUTC) && !n.pushedToNtfy);
+    const deferred = incoming.length - pastCount - toPush.length
+                     - incoming.filter(n => n.pushedToNtfy).length;
 
     let pushed = 0;
     let failed = 0;
-    for (const n of future) {
+    for (const n of toPush) {
       const ok = await pushToNtfy(n);
-      if (ok) pushed++; else failed++;
+      if (ok) { pushed++; n.pushedToNtfy = true; }
+      else    { failed++; }
     }
+    saveQueue(merged);   // save again with updated pushedToNtfy flags
 
-    console.log(`[NTFY] Pushed ${pushed}, failed ${failed}, skipped ${skipped} past — to ${NTFY_SERVER}`);
-    json(res, 200, { pushed, failed, skipped, queued: merged.length });
+    console.log(`[PUSH] ${pushed} pushed, ${failed} failed, ${deferred} deferred, ${pastCount} past`);
+    json(res, 200, { pushed, failed, deferred, skipped: pastCount, queued: merged.length });
     return;
   }
 
@@ -397,3 +417,27 @@ server.listen(PORT, () => {
   console.log(`Session TTL: 8 hours`);
   console.log(`NTFY: ${NTFY_SERVER}/${NTFY_CHANNEL}`);
 });
+
+// ─── AUTO-DRIP: push upcoming notifications to ntfy every hour ───────────────
+const DRIP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+
+async function dripPush() {
+  const queue = loadQueue();
+  const toPush = queue.filter(n => n.fireUTC && !n.pushedToNtfy && isWithinNtfyWindow(n.fireUTC));
+
+  if (toPush.length === 0) return;
+
+  let pushed = 0;
+  let failed = 0;
+  for (const n of toPush) {
+    const ok = await pushToNtfy(n);
+    if (ok) { pushed++; n.pushedToNtfy = true; }
+    else    { failed++; }
+  }
+  saveQueue(queue);
+  console.log(`[DRIP] Pushed ${pushed}, failed ${failed} — next check in 1h`);
+}
+
+// Run once on boot, then every hour
+dripPush();
+setInterval(dripPush, DRIP_INTERVAL_MS);

@@ -1563,9 +1563,10 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const result = await resp.json();
 
-    const parts = [`✓ Pushed ${result.pushed} notifications to NTFY`];
-    if (result.skipped) parts.push(`${result.skipped} past (skipped)`);
-    if (result.failed)  parts.push(`${result.failed} failed`);
+    const parts = [`✓ Pushed ${result.pushed} to NTFY now`];
+    if (result.deferred) parts.push(`${result.deferred} deferred (auto-drip)`);
+    if (result.skipped)  parts.push(`${result.skipped} past`);
+    if (result.failed)   parts.push(`${result.failed} failed`);
     parts.push(`Queue: ${result.queued} total`);
     showAlert(parts.join(' · '), result.failed > 0 ? 'info' : 'success');
 
