@@ -85,29 +85,7 @@
     .btn-secondary { background: var(--surface2); color: var(--text-muted); border-color: var(--border); }
     .btn-danger { background: #1a0e0e; color: #c06060; border-color: #3a1818; }
     .btn-ntfy { background: var(--red); color: #e0c0c0; border-color: #4a1a1a; font-weight: 600; letter-spacing: 0.03em; }
-
-    /* ── View nav bar ── */
-    .view-nav {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 0; margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .view-nav .back-btn {
-      background: none; border: 1px solid var(--border); color: var(--text-muted);
-      padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 0.72rem;
-      transition: color 0.12s;
-    }
-    .view-nav .back-btn:hover { color: var(--text); }
-    .view-nav .view-title { font-size: 0.82rem; font-weight: 600; color: var(--text); }
-    .view-nav .view-page-info { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); }
-
-    /* ── Pagination ── */
-    .pagination {
-      display: flex; align-items: center; justify-content: center;
-      gap: 12px; padding: 14px 0; margin-top: 10px;
-    }
-    .pagination .btn { min-width: 70px; justify-content: center; }
-    .pagination .page-label { font-size: 0.72rem; color: var(--text-muted); }
+    .btn.active { background: var(--accent-dim); color: #ddd; border-color: var(--accent); }
 
     /* ── Month info bar ── */
     .month-bar {
@@ -186,6 +164,23 @@
       cursor: pointer; transition: all 0.12s;
     }
     .day-tab:hover, .day-tab.active { background: var(--accent-dim); color: var(--text); border-color: var(--accent-dim); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; padding: 14px 0; margin-top: 10px;
+    }
+    .pagination .btn { min-width: 70px; justify-content: center; }
+    .pagination .page-label { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ── Section header for inline panels ── */
+    .panel-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0 8px; margin-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .panel-header .panel-title { font-size: 0.78rem; font-weight: 600; color: var(--text); }
+    .panel-header .panel-info { font-size: 0.7rem; color: var(--text-muted); margin-left: auto; }
 
     /* ── Alerts ── */
     .alert { padding: 8px 12px; border-radius: 3px; margin-bottom: 12px; font-size: 0.76rem; }
@@ -292,176 +287,158 @@
 
 <div class="main">
 
-  <!-- ═══ VIEW: MAIN ═══ -->
-  <div id="view-main">
-
-    <div class="section" id="section-upload">
-      <div class="section-title">Import CSV</div>
-      <div class="upload-zone" id="drop-zone">
-        <input type="file" id="csv-file" accept=".csv" />
-        <div class="upload-icon"></div>
-        <h2>Drop your prayer times CSV here</h2>
-        <p>or click to browse</p>
-      </div>
-      <div style="margin-top:6px; text-align:right;">
-        <span class="raw-toggle" id="paste-toggle">or paste CSV text</span>
-      </div>
-      <div id="paste-area" class="hidden" style="margin-top:8px;">
-        <textarea id="csv-paste" rows="4" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
-        <button class="btn btn-secondary" style="margin-top:6px;" id="parse-paste-btn">Parse pasted CSV</button>
-      </div>
+  <div class="section" id="section-upload">
+    <div class="section-title">Import CSV</div>
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="csv-file" accept=".csv" />
+      <div class="upload-icon"></div>
+      <h2>Drop your prayer times CSV here</h2>
+      <p>or click to browse</p>
     </div>
-
-    <div id="parse-chooser-wrap" class="section hidden">
-      <div class="section-title">Parse method</div>
-      <div class="parse-chooser">
-        <div class="parse-option" id="parse-script">
-          <div class="parse-option-icon">&gt;_</div>
-          <div>
-            <div class="parse-option-title">Script Parse</div>
-            <div class="parse-option-desc">Standard MUAI format</div>
-          </div>
-        </div>
-        <div class="parse-option ai hidden" id="parse-ai">
-          <div class="parse-option-icon">AI</div>
-          <div>
-            <div class="parse-option-title">AI Parse</div>
-            <div class="parse-option-desc">Any CSV format</div>
-          </div>
-        </div>
-      </div>
-      <div id="parse-loading" class="parse-loading hidden">
-        <span class="spinner"></span> AI is reading your timetable...
-      </div>
+    <div style="margin-top:6px; text-align:right;">
+      <span class="raw-toggle" id="paste-toggle">or paste CSV text</span>
     </div>
-
-    <div id="alert-area"></div>
-
-    <div id="data-area" class="hidden">
-      <div class="section">
-        <div class="section-title">Parsed Month</div>
-        <div class="month-bar">
-          <div class="month-title" id="month-title">&mdash;</div>
-          <div class="stats">
-            <span><strong id="stat-days">0</strong> days</span>
-            <span><strong id="stat-fri">0</strong> Fri</span>
-          </div>
-          <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">Clear</button>
-        </div>
-        <div class="date-range-bar" id="date-range-bar">
-          <span style="color:#444">Range:</span>
-          <span id="stat-start-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
-          <span style="color:#333">&rarr;</span>
-          <span id="stat-end-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
-          <span style="color:#333;margin-left:6px;">&middot;</span>
-          <span id="stat-total-notifs" style="color:var(--accent);font-weight:600;">0 notifications</span>
-          <span style="color:#333">across</span>
-          <span id="stat-days2" style="color:var(--accent);font-weight:600;">0 days</span>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Actions</div>
-        <div class="actions-bar">
-          <button class="btn btn-primary" id="preview-btn">Preview</button>
-          <button class="btn btn-ntfy" id="push-ntfy-btn">Push to NTFY</button>
-          <button class="btn btn-secondary" id="queue-btn">Queue</button>
-          <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-title">Prayer Times</div>
-        <div class="table-wrap">
-          <table id="prayer-table">
-            <thead>
-              <tr>
-                <th rowspan="2" style="min-width:36px;">Day</th>
-                <th rowspan="2" style="min-width:32px;">Hijri</th>
-                <th rowspan="2" style="min-width:44px;">Date</th>
-                <th colspan="2" class="th-group th-fajr">Fajr</th>
-                <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
-                <th colspan="2" class="th-group th-zuhr">Zuhr</th>
-                <th colspan="2" class="th-group th-asr">Asr</th>
-                <th colspan="2" class="th-group th-maghrib">Maghrib</th>
-                <th colspan="2" class="th-group th-isha">Isha</th>
-              </tr>
-              <tr>
-                <th class="th-fajr">Start</th>
-                <th class="th-fajr">Jamat</th>
-                <th class="th-zuhr">Start</th>
-                <th class="th-zuhr">Jamat</th>
-                <th class="th-asr">Start</th>
-                <th class="th-asr">Jamat</th>
-                <th class="th-maghrib">Adhan</th>
-                <th class="th-maghrib">Jamat</th>
-                <th class="th-isha">Start</th>
-                <th class="th-isha">Jamat</th>
-              </tr>
-            </thead>
-            <tbody id="prayer-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="raw-json-panel" class="hidden section">
-        <div class="section-title">Raw Parsed JSON</div>
-        <div class="raw-panel" id="raw-json-content"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ═══ VIEW: PREVIEW ═══ -->
-  <div id="view-preview" class="hidden">
-    <div class="view-nav">
-      <button class="back-btn" id="preview-back">Back</button>
-      <div class="view-title">Notification Preview</div>
-      <div class="view-page-info" id="preview-page-info"></div>
-    </div>
-    <div class="day-filter" id="day-filter-tabs"></div>
-    <div class="preview-panel" id="preview-container"></div>
-    <div class="pagination">
-      <button class="btn btn-secondary" id="preview-prev">Prev</button>
-      <span class="page-label" id="preview-page-label"></span>
-      <button class="btn btn-secondary" id="preview-next">Next</button>
+    <div id="paste-area" class="hidden" style="margin-top:8px;">
+      <textarea id="csv-paste" rows="4" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
+      <button class="btn btn-secondary" style="margin-top:6px;" id="parse-paste-btn">Parse pasted CSV</button>
     </div>
   </div>
 
-  <!-- ═══ VIEW: QUEUE ═══ -->
-  <div id="view-queue" class="hidden">
-    <div class="view-nav">
-      <button class="back-btn" id="queue-back">Back</button>
-      <div class="view-title">Notification Queue</div>
-    </div>
-    <div id="alert-area-queue"></div>
-    <div class="sched-header">
-      <div>
-        <div class="sched-title">Scheduled</div>
-        <div class="sched-count" id="sched-count">Loading...</div>
+  <div id="parse-chooser-wrap" class="section hidden">
+    <div class="section-title">Parse method</div>
+    <div class="parse-chooser">
+      <div class="parse-option" id="parse-script">
+        <div class="parse-option-icon">&gt;_</div>
+        <div>
+          <div class="parse-option-title">Script Parse</div>
+          <div class="parse-option-desc">Standard MUAI format</div>
+        </div>
       </div>
-      <div class="sched-actions">
-        <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
+      <div class="parse-option ai hidden" id="parse-ai">
+        <div class="parse-option-icon">AI</div>
+        <div>
+          <div class="parse-option-title">AI Parse</div>
+          <div class="parse-option-desc">Any CSV format</div>
+        </div>
       </div>
     </div>
-    <div id="sched-list"></div>
+    <div id="parse-loading" class="parse-loading hidden">
+      <span class="spinner"></span> AI is reading your timetable...
+    </div>
+  </div>
+
+  <div id="alert-area"></div>
+
+  <div id="data-area" class="hidden">
+    <div class="section">
+      <div class="section-title">Parsed Month</div>
+      <div class="month-bar">
+        <div class="month-title" id="month-title">&mdash;</div>
+        <div class="stats">
+          <span><strong id="stat-days">0</strong> days</span>
+          <span><strong id="stat-fri">0</strong> Fri</span>
+        </div>
+        <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">Clear</button>
+      </div>
+      <div class="date-range-bar" id="date-range-bar">
+        <span style="color:#444">Range:</span>
+        <span id="stat-start-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
+        <span style="color:#333">&rarr;</span>
+        <span id="stat-end-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
+        <span style="color:#333;margin-left:6px;">&middot;</span>
+        <span id="stat-total-notifs" style="color:var(--accent);font-weight:600;">0 notifications</span>
+        <span style="color:#333">across</span>
+        <span id="stat-days2" style="color:var(--accent);font-weight:600;">0 days</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Actions</div>
+      <div class="actions-bar">
+        <button class="btn btn-primary" id="preview-btn">Preview</button>
+        <button class="btn btn-ntfy" id="push-ntfy-btn">Push to NTFY</button>
+        <button class="btn btn-secondary" id="queue-btn">Queue</button>
+        <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Prayer Times</div>
+      <div class="table-wrap">
+        <table id="prayer-table">
+          <thead>
+            <tr>
+              <th rowspan="2" style="min-width:36px;">Day</th>
+              <th rowspan="2" style="min-width:32px;">Hijri</th>
+              <th rowspan="2" style="min-width:44px;">Date</th>
+              <th colspan="2" class="th-group th-fajr">Fajr</th>
+              <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
+              <th colspan="2" class="th-group th-zuhr">Zuhr</th>
+              <th colspan="2" class="th-group th-asr">Asr</th>
+              <th colspan="2" class="th-group th-maghrib">Maghrib</th>
+              <th colspan="2" class="th-group th-isha">Isha</th>
+            </tr>
+            <tr>
+              <th class="th-fajr">Start</th>
+              <th class="th-fajr">Jamat</th>
+              <th class="th-zuhr">Start</th>
+              <th class="th-zuhr">Jamat</th>
+              <th class="th-asr">Start</th>
+              <th class="th-asr">Jamat</th>
+              <th class="th-maghrib">Adhan</th>
+              <th class="th-maghrib">Jamat</th>
+              <th class="th-isha">Start</th>
+              <th class="th-isha">Jamat</th>
+            </tr>
+          </thead>
+          <tbody id="prayer-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="raw-json-panel" class="hidden section">
+      <div class="section-title">Raw Parsed JSON</div>
+      <div class="raw-panel" id="raw-json-content"></div>
+    </div>
+
+    <!-- Notification Preview (inline, toggled by Preview button) -->
+    <div id="section-preview" class="hidden section">
+      <div class="panel-header">
+        <div class="panel-title">Notification Preview</div>
+        <div class="panel-info" id="preview-page-info"></div>
+      </div>
+      <div class="day-filter" id="day-filter-tabs"></div>
+      <div class="preview-panel" id="preview-container"></div>
+      <div class="pagination">
+        <button class="btn btn-secondary" id="preview-prev">Prev</button>
+        <span class="page-label" id="preview-page-label"></span>
+        <button class="btn btn-secondary" id="preview-next">Next</button>
+      </div>
+    </div>
+
+    <!-- Queue (inline, toggled by Queue button) -->
+    <div id="section-queue" class="hidden section">
+      <div class="panel-header">
+        <div class="panel-title">Notification Queue</div>
+      </div>
+      <div id="alert-area-queue"></div>
+      <div class="sched-header">
+        <div>
+          <div class="sched-title">Scheduled</div>
+          <div class="sched-count" id="sched-count">Loading...</div>
+        </div>
+        <div class="sched-actions">
+          <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
+        </div>
+      </div>
+      <div id="sched-list"></div>
+    </div>
+
   </div>
 
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-// VIEW SWITCHING
-// ─────────────────────────────────────────────
-
-function showView(name) {
-  document.getElementById('view-main').classList.add('hidden');
-  document.getElementById('view-preview').classList.add('hidden');
-  document.getElementById('view-queue').classList.add('hidden');
-  document.getElementById('view-' + name).classList.remove('hidden');
-  window.scrollTo(0, 0);
-}
-
 // ─────────────────────────────────────────────
 // CSV PARSER
 // ─────────────────────────────────────────────
@@ -897,6 +874,21 @@ function renderDayFilterTabs() {
   };
 }
 
+// ── Toggle inline sections ──
+
+function toggleSection(id, btn) {
+  const el = document.getElementById(id);
+  const isVisible = !el.classList.contains('hidden');
+  if (isVisible) {
+    el.classList.add('hidden');
+    if (btn) btn.classList.remove('active');
+  } else {
+    el.classList.remove('hidden');
+    if (btn) btn.classList.add('active');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 // ── Remaining renderers ──
 
 function loadData(data) {
@@ -905,6 +897,10 @@ function loadData(data) {
   renderTable(data);
   document.getElementById('data-area').classList.remove('hidden');
   document.getElementById('raw-json-panel').classList.add('hidden');
+  document.getElementById('section-preview').classList.add('hidden');
+  document.getElementById('section-queue').classList.add('hidden');
+  document.getElementById('preview-btn').classList.remove('active');
+  document.getElementById('queue-btn').classList.remove('active');
   showAlert(`Parsed ${data.days.length} days from "${data.title}"`, 'success');
 }
 
@@ -959,7 +955,7 @@ async function aiParse() {
 }
 
 // ─────────────────────────────────────────────
-// SCHEDULED NOTIFICATIONS (QUEUE VIEW)
+// SCHEDULED NOTIFICATIONS (QUEUE)
 // ─────────────────────────────────────────────
 
 function groupByDay(queue) {
@@ -1108,30 +1104,45 @@ document.getElementById('clear-btn').addEventListener('click', () => {
   document.getElementById('csv-file').value = '';
   document.getElementById('csv-paste').value = '';
   resetDropZone();
-  showView('main');
 });
 
-// Preview — switch to preview view
+// Preview — toggle inline below
 document.getElementById('preview-btn').addEventListener('click', () => {
   if (!parsedData) return;
+  const section = document.getElementById('section-preview');
+  const btn = document.getElementById('preview-btn');
+  if (!section.classList.contains('hidden')) {
+    section.classList.add('hidden');
+    btn.classList.remove('active');
+    return;
+  }
   previewFilter = 'all';
   previewPage = 0;
   renderDayFilterTabs();
   renderPreviewPage();
-  showView('preview');
+  section.classList.remove('hidden');
+  btn.classList.add('active');
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 // Preview pagination
-document.getElementById('preview-prev').addEventListener('click', () => { previewPage--; renderPreviewPage(); window.scrollTo(0, 0); });
-document.getElementById('preview-next').addEventListener('click', () => { previewPage++; renderPreviewPage(); window.scrollTo(0, 0); });
-document.getElementById('preview-back').addEventListener('click', () => showView('main'));
+document.getElementById('preview-prev').addEventListener('click', () => { previewPage--; renderPreviewPage(); });
+document.getElementById('preview-next').addEventListener('click', () => { previewPage++; renderPreviewPage(); });
 
-// Queue view
+// Queue — toggle inline below
 document.getElementById('queue-btn').addEventListener('click', () => {
+  const section = document.getElementById('section-queue');
+  const btn = document.getElementById('queue-btn');
+  if (!section.classList.contains('hidden')) {
+    section.classList.add('hidden');
+    btn.classList.remove('active');
+    return;
+  }
   fetchAndRenderQueue();
-  showView('queue');
+  section.classList.remove('hidden');
+  btn.classList.add('active');
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
-document.getElementById('queue-back').addEventListener('click', () => showView('main'));
 
 // Raw JSON
 document.getElementById('raw-btn').addEventListener('click', () => {
@@ -1146,7 +1157,7 @@ document.getElementById('raw-btn').addEventListener('click', () => {
   }
 });
 
-// PUSH TO NTFY — then switch to queue view
+// PUSH TO NTFY — then show queue inline
 document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
   if (!parsedData) { showAlert('No CSV loaded.', 'error'); return; }
   const btn = document.getElementById('push-ntfy-btn');
@@ -1171,8 +1182,12 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     parts.push(`Queue: ${result.queued} total`);
     showAlert(parts.join(' \u00b7 '), result.failed > 0 ? 'info' : 'success');
 
+    // Show queue section inline after push
     await fetchAndRenderQueue();
-    showView('queue');
+    const queueSection = document.getElementById('section-queue');
+    queueSection.classList.remove('hidden');
+    document.getElementById('queue-btn').classList.add('active');
+    queueSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
     showAlert(`Push failed: ${e.message}`, 'error');
     console.error(e);
@@ -1207,9 +1222,6 @@ fetch('/api/ai-available').then(r => r.json()).then(d => {
   aiAvailable = d.available;
   if (aiAvailable) document.getElementById('parse-ai').classList.remove('hidden');
 }).catch(() => {});
-
-// Load queue on page start
-fetchAndRenderQueue();
 </script>
 </body>
 </html>
