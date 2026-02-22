@@ -356,7 +356,7 @@
       <div class="section-title">Actions</div>
       <div class="actions-bar">
         <button class="btn btn-primary" id="preview-btn">Preview</button>
-        <button class="btn btn-ntfy" id="push-ntfy-btn">Push to NTFY</button>
+        <button class="btn btn-ntfy" id="push-ntfy-btn">Schedule</button>
         <button class="btn btn-secondary" id="queue-btn">Queue</button>
         <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
       </div>
@@ -1157,11 +1157,11 @@ document.getElementById('raw-btn').addEventListener('click', () => {
   }
 });
 
-// PUSH TO NTFY — then show queue inline
+// Schedule — save to queue, server fires at the right time
 document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
   if (!parsedData) { showAlert('No CSV loaded.', 'error'); return; }
   const btn = document.getElementById('push-ntfy-btn');
-  btn.disabled = true; btn.textContent = 'Pushing\u2026';
+  btn.disabled = true; btn.textContent = 'Scheduling\u2026';
 
   try {
     const notifications = buildAllNotifications(parsedData);
@@ -1175,24 +1175,22 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const result = await resp.json();
 
-    const parts = [`Pushed ${result.pushed} to NTFY`];
-    if (result.deferred) parts.push(`${result.deferred} deferred`);
-    if (result.skipped) parts.push(`${result.skipped} past`);
-    if (result.failed) parts.push(`${result.failed} failed`);
-    parts.push(`Queue: ${result.queued} total`);
-    showAlert(parts.join(' \u00b7 '), result.failed > 0 ? 'info' : 'success');
+    const parts = [`${result.queued} scheduled`];
+    if (result.skipped) parts.push(`${result.skipped} past skipped`);
+    parts.push(`${result.pending} pending`);
+    showAlert(parts.join(' \u00b7 '), 'success');
 
-    // Show queue section inline after push
+    // Show queue section inline after scheduling
     await fetchAndRenderQueue();
     const queueSection = document.getElementById('section-queue');
     queueSection.classList.remove('hidden');
     document.getElementById('queue-btn').classList.add('active');
     queueSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
-    showAlert(`Push failed: ${e.message}`, 'error');
+    showAlert(`Schedule failed: ${e.message}`, 'error');
     console.error(e);
   } finally {
-    btn.disabled = false; btn.textContent = 'Push to NTFY';
+    btn.disabled = false; btn.textContent = 'Schedule';
   }
 });
 

@@ -87,19 +87,8 @@ function saveQueue(queue) {
   fs.writeFileSync(QUEUE_FILE, JSON.stringify(queue, null, 2), 'utf8');
 }
 
-// ─── NTFY SCHEDULING HELPERS ─────────────────────────────────────────────────
-const NTFY_WINDOW_MS = 72 * 60 * 60 * 1000; // 3 days — ntfy.sh free tier limit
-
-function isWithinNtfyWindow(fireUTC) {
-  const fireMs = new Date(fireUTC).getTime();
-  const now    = Date.now();
-  return fireMs > now && fireMs <= now + NTFY_WINDOW_MS;
-}
-
-// ─── NTFY PUSH ────────────────────────────────────────────────────────────────
-// Posts JSON to the ntfy ROOT endpoint (not the topic URL) — posting JSON to
-// the topic URL causes ntfy to treat the body as a file attachment.
-// Uses Unix timestamps for 'delay' — ntfy rejects ISO 8601 in scheduled delivery.
+// ─── NTFY PUSH (instant, no scheduling) ──────────────────────────────────────
+// Server is the scheduler. ntfy is just the delivery pipe — fires immediately.
 const EMOJI_TO_TAG = {
   '🕋': 'kaaba',
   '☀️': 'sunny',
@@ -109,7 +98,7 @@ const EMOJI_TO_TAG = {
 };
 
 async function pushToNtfy(notification) {
-  const url = NTFY_SERVER;   // root endpoint — topic goes inside JSON body
+  const url = NTFY_SERVER;
   const message = [notification.details, notification.countdown].filter(Boolean).join('\n') || notification.title;
   const tag = EMOJI_TO_TAG[notification.icon] || 'bell';
 
@@ -120,10 +109,7 @@ async function pushToNtfy(notification) {
     priority: 5,
     tags:     [tag],
   };
-  if (notification.fireUTC) {
-    // ntfy JSON API uses 'delay' (not 'at') — accepts Unix timestamp as string
-    payload.delay = String(Math.floor(new Date(notification.fireUTC).getTime() / 1000));
-  }
+  // No delay — fire immediately
 
   const body = JSON.stringify(payload);
 
@@ -441,47 +427,34 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
     return;
   }
 
-  // ── API: POST /api/push — push notifications to NTFY ────────────────────
+  // ── API: POST /api/push — queue notifications (server fires them at the right time) ──
   if (url === '/api/push' && req.method === 'POST') {
     const raw = await parseBody(req);
     let incoming;
     try { incoming = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
     if (!Array.isArray(incoming)) { json(res, 400, { error: 'expected array' }); return; }
 
-    // 1. Merge into queue — preserve pushedToNtfy flag if content unchanged
+    const nowISO = new Date().toISOString();
     const queue = loadQueue();
     const map = new Map(queue.map(n => [n.fireUTC, n]));
+
+    let queued = 0;
+    let skipped = 0;
     for (const n of incoming) {
       if (!n.fireUTC) continue;
+      if (n.fireUTC <= nowISO) { skipped++; continue; }
+      // Don't overwrite already-fired notifications
       const existing = map.get(n.fireUTC);
-      // Keep pushedToNtfy if title+message unchanged (same notification re-uploaded)
-      if (existing && existing.pushedToNtfy &&
-          existing.title === n.title && existing.details === n.details) {
-        n.pushedToNtfy = true;
-      }
+      if (existing && existing.firedToNtfy) continue;
       map.set(n.fireUTC, n);
+      queued++;
     }
     const merged = Array.from(map.values()).sort((a, b) => (a.fireUTC || '').localeCompare(b.fireUTC || ''));
     saveQueue(merged);
 
-    // 2. Push only notifications within the 3-day ntfy window that haven't been pushed yet
-    const nowISO = new Date().toISOString();
-    const pastCount = incoming.filter(n => !n.fireUTC || n.fireUTC <= nowISO).length;
-    const toPush = incoming.filter(n => n.fireUTC && isWithinNtfyWindow(n.fireUTC) && !n.pushedToNtfy);
-    const deferred = incoming.length - pastCount - toPush.length
-                     - incoming.filter(n => n.pushedToNtfy).length;
-
-    let pushed = 0;
-    let failed = 0;
-    for (const n of toPush) {
-      const ok = await pushToNtfy(n);
-      if (ok) { pushed++; n.pushedToNtfy = true; }
-      else    { failed++; }
-    }
-    saveQueue(merged);   // save again with updated pushedToNtfy flags
-
-    console.log(`[PUSH] ${pushed} pushed, ${failed} failed, ${deferred} deferred, ${pastCount} past`);
-    json(res, 200, { pushed, failed, deferred, skipped: pastCount, queued: merged.length });
+    const future = merged.filter(n => n.fireUTC > nowISO && !n.firedToNtfy).length;
+    console.log(`[QUEUE] ${queued} queued, ${skipped} past skipped, ${future} pending`);
+    json(res, 200, { queued, skipped, total: merged.length, pending: future });
     return;
   }
 
@@ -522,26 +495,31 @@ server.listen(PORT, () => {
   console.log(`NTFY: ${NTFY_SERVER}/${NTFY_CHANNEL}`);
 });
 
-// ─── AUTO-DRIP: push upcoming notifications to ntfy every hour ───────────────
-const DRIP_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+// ─── SCHEDULER: check every 30s, fire notifications whose time has arrived ───
+const TICK_INTERVAL_MS = 30 * 1000; // 30 seconds
 
-async function dripPush() {
+async function schedulerTick() {
   const queue = loadQueue();
-  const toPush = queue.filter(n => n.fireUTC && !n.pushedToNtfy && isWithinNtfyWindow(n.fireUTC));
+  const nowISO = new Date().toISOString();
 
-  if (toPush.length === 0) return;
+  // Find notifications that are due (fireUTC <= now) and haven't been fired yet
+  const due = queue.filter(n => n.fireUTC && !n.firedToNtfy && n.fireUTC <= nowISO);
+
+  if (due.length === 0) return;
 
   let pushed = 0;
   let failed = 0;
-  for (const n of toPush) {
+  for (const n of due) {
     const ok = await pushToNtfy(n);
-    if (ok) { pushed++; n.pushedToNtfy = true; }
+    if (ok) { pushed++; n.firedToNtfy = true; }
     else    { failed++; }
   }
   saveQueue(queue);
-  console.log(`[DRIP] Pushed ${pushed}, failed ${failed} — next check in 1h`);
+  if (pushed > 0 || failed > 0) {
+    console.log(`[SCHEDULER] Fired ${pushed}, failed ${failed}`);
+  }
 }
 
-// Run once on boot, then every hour
-dripPush();
-setInterval(dripPush, DRIP_INTERVAL_MS);
+// Run every 30 seconds
+setInterval(schedulerTick, TICK_INTERVAL_MS);
+console.log('[SCHEDULER] Running — checking every 30s for due notifications');
