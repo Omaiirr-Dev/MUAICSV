@@ -327,9 +327,19 @@ const server = http.createServer(async (req, res) => {
     try { body = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
     if (!body.csv || typeof body.csv !== 'string') { json(res, 400, { error: 'missing csv field' }); return; }
 
-    const systemPrompt = `You are a prayer timetable parser. Given a CSV file containing Islamic prayer times, extract ONLY the data needed and return valid JSON.
+    // Inject current date so the AI knows the real-world context
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-GB', {
+      timeZone: UK_TZ, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+    const currentYear = now.toLocaleDateString('en-GB', { timeZone: UK_TZ, year: 'numeric' });
 
-Return this exact structure:
+    const systemPrompt = `You are a prayer timetable parser for UK mosques. Given a CSV containing Islamic prayer times, extract the data and return valid JSON.
+
+Today's date is: ${todayStr}
+Current year: ${currentYear}
+
+Return this exact JSON structure:
 {
   "title": "Month Name Year AH",
   "days": [
@@ -345,7 +355,7 @@ Return this exact structure:
       "sunrise": "6:45",
       "zuhrStart": "12:30",
       "asrStart": "15:45",
-      "maghribAdhan": "18:15",
+      "maghribAdhan": "17:27",
       "ishaStart": "19:45",
       "fajrJamat": "",
       "zuhrJamat": "",
@@ -355,32 +365,46 @@ Return this exact structure:
   ]
 }
 
-Column mapping — CSV headers vary wildly, map them correctly:
-- "Fajr" / "Fajr Begins" / "Fajr Start" → fajrStart (the adhan/start time)
+CRITICAL — Maghrib / Sunset handling:
+- In Islam, Maghrib prayer starts at sunset. Sunset time = Maghrib adhan time. They are IDENTICAL.
+- Any column labelled "Sunset", "Sun Set", "Sun Set & Adhan", "Iftar", or "Maghrib" contains the maghribAdhan value.
+- You MUST read the ACTUAL time value from each row. Every day has a DIFFERENT sunset time. If the CSV shows 5:27, 5:28, 5:30 etc., those are the real per-day values — do NOT replace them with a single rounded number.
+- Sunset times like "5:27" in a UK winter/spring context are PM — convert to 24h: "17:27". Do NOT round to "18:00".
+
+Column mapping — CSV headers vary, map them correctly:
+- "Fajr" / "Fajr Begins" / "Suhur End" / "Fajr Start" → fajrStart
 - "Fajr Jamat" / "Fajr Congregation" / "Fajr Iqamah" / second Fajr column → fajrJamat
 - "Sunrise" / "Sun Rise" / "Shuruq" → sunrise
 - "Zuhr" / "Dhuhr" / "Zuhr & Jumu'ah" / "Dhuhr Begins" → zuhrStart
 - "Zuhr Jamat" / "Dhuhr Jamat" / second Zuhr column → zuhrJamat
-- "Asr" / "Asr Begins" / "Asr Start" → asrStart
+- "Asr" / "Asr Begins" → asrStart
 - "Asr Jamat" / second Asr column → asrJamat
-- CRITICAL: "Sunset" / "Sun Set" / "Sun Set & Adhan" / "Maghrib" / "Maghrib Adhan" / "Iftar" → maghribAdhan. Sunset IS the Maghrib adhan time — they are the SAME thing. Never leave maghribAdhan empty if a sunset time exists.
-- "Maghrib Jamat" / second Maghrib column (if distinct from adhan) → maghribJamat (often empty)
-- "Isha" / "I'sha" / "Isha Begins" → ishaStart
-- "Isha Jamat" / "I'sha Jamat" / second Isha column → ishaJamat
+- "Sunset" / "Sun Set" / "Sun Set & Adhan" / "Iftar" / "Maghrib" / "Maghrib Adhan" → maghribAdhan
+- "Isha" / "I'sha" / "Isha Begins" / "I'sha/Tarawee" → ishaStart
+- "Isha Jamat" / "I'sha Jamat" / "Tarawee" / second Isha column → ishaJamat
 
-Each prayer typically has two columns: start/adhan time and jamat/congregation time. If only one column exists for a prayer, it is the start time. If two columns exist, the first is start and the second is jamat.
+Each prayer typically has two columns: start time and jamat/congregation time. First column = start, second = jamat. If only one column exists, it is the start time.
+
+Descriptive text in cells (e.g. "Fajr Jamat will be 15 Minutes after suhur End") is NOT a time — ignore it and leave the jamat field as empty string "".
+
+Time conversion rules:
+- Output ALL times in H:MM or HH:MM 24-hour format.
+- Prayer times follow this daily sequence in the UK:
+  Fajr: 3:00-6:00 (already AM, no conversion needed)
+  Sunrise: 5:00-7:00 (already AM)
+  Zuhr: 12:00-13:30 (already in 12-13 range)
+  Asr: 13:30-17:00 (if CSV shows "3:36", this is PM → "15:36")
+  Maghrib/Sunset: 15:30-21:00 (if CSV shows "5:27", this is PM → "17:27")
+  Isha: 18:00-23:00 (if CSV shows "6:59", this is PM → "18:59")
+- NEVER output the same time for every row. Each day has unique values — read them individually.
 
 Date handling:
-- Day names must be 3-letter: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+- Use today's date (${todayStr}) to determine the correct year. These timetables are for the current or upcoming month, NEVER for past dates.
+- Day names: 3-letter (Mon, Tue, Wed, Thu, Fri, Sat, Sun)
 - gregMonth is 0-indexed (Jan=0, Feb=1, ..., Dec=11)
 - gregFull format: "Day, D Mon YYYY" e.g. "Mon, 3 Mar 2025"
-- hijriDate: the Islamic calendar day number if present, otherwise ""
-- If you can identify the Islamic month, set title accordingly (e.g. "Ramadan 1447 AH")
-
-Time format:
-- All times must be in H:MM or HH:MM 24-hour format (e.g. "5:23", "12:30", "17:45")
-- If the CSV uses 12-hour format, convert to 24-hour
-- Prayer times follow a natural daily sequence: Fajr (~3-6am), Sunrise (~5-7am), Zuhr (~12-1pm), Asr (~3-5pm), Maghrib/Sunset (~5-8pm), Isha (~7-10pm). Use this to resolve ambiguous AM/PM times.
+- hijriDate: Islamic calendar day number if present, otherwise ""
+- If you can identify the Islamic month, set title (e.g. "Ramadan 1447 AH")
 
 Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
 
