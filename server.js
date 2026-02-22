@@ -355,15 +355,34 @@ Return this exact structure:
   ]
 }
 
-Rules:
-- Extract START times for Fajr, Sunrise, Zuhr, Asr, Maghrib (sunset/adhan), Isha
-- Also extract jamat/congregation times if present, otherwise empty string
-- Times must be in H:MM 24-hour format (e.g. "5:23", "12:30", "17:45")
+Column mapping — CSV headers vary wildly, map them correctly:
+- "Fajr" / "Fajr Begins" / "Fajr Start" → fajrStart (the adhan/start time)
+- "Fajr Jamat" / "Fajr Congregation" / "Fajr Iqamah" / second Fajr column → fajrJamat
+- "Sunrise" / "Sun Rise" / "Shuruq" → sunrise
+- "Zuhr" / "Dhuhr" / "Zuhr & Jumu'ah" / "Dhuhr Begins" → zuhrStart
+- "Zuhr Jamat" / "Dhuhr Jamat" / second Zuhr column → zuhrJamat
+- "Asr" / "Asr Begins" / "Asr Start" → asrStart
+- "Asr Jamat" / second Asr column → asrJamat
+- CRITICAL: "Sunset" / "Sun Set" / "Sun Set & Adhan" / "Maghrib" / "Maghrib Adhan" / "Iftar" → maghribAdhan. Sunset IS the Maghrib adhan time — they are the SAME thing. Never leave maghribAdhan empty if a sunset time exists.
+- "Maghrib Jamat" / second Maghrib column (if distinct from adhan) → maghribJamat (often empty)
+- "Isha" / "I'sha" / "Isha Begins" → ishaStart
+- "Isha Jamat" / "I'sha Jamat" / second Isha column → ishaJamat
+
+Each prayer typically has two columns: start/adhan time and jamat/congregation time. If only one column exists for a prayer, it is the start time. If two columns exist, the first is start and the second is jamat.
+
+Date handling:
 - Day names must be 3-letter: Mon, Tue, Wed, Thu, Fri, Sat, Sun
 - gregMonth is 0-indexed (Jan=0, Feb=1, ..., Dec=11)
 - gregFull format: "Day, D Mon YYYY" e.g. "Mon, 3 Mar 2025"
-- If you can identify the Islamic month, set title accordingly
-- Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
+- hijriDate: the Islamic calendar day number if present, otherwise ""
+- If you can identify the Islamic month, set title accordingly (e.g. "Ramadan 1447 AH")
+
+Time format:
+- All times must be in H:MM or HH:MM 24-hour format (e.g. "5:23", "12:30", "17:45")
+- If the CSV uses 12-hour format, convert to 24-hour
+- Prayer times follow a natural daily sequence: Fajr (~3-6am), Sunrise (~5-7am), Zuhr (~12-1pm), Asr (~3-5pm), Maghrib/Sunset (~5-8pm), Isha (~7-10pm). Use this to resolve ambiguous AM/PM times.
+
+Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
 
     try {
       const openaiResp = await fetch('https://api.openai.com/v1/chat/completions', {
