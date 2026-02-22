@@ -344,7 +344,7 @@ You MUST output ALL rows from the CSV — every single day, not just one.
 Rules:
 1. Sunset = Maghrib. Any column called Sunset/Sun Set/Iftar/Maghrib → maghribAdhan. Read the actual per-row value.
 2. Times in 24h format. CSV times after Zuhr are PM: "3:36" Asr → "15:36", "5:27" sunset → "17:27", "6:59" Isha → "18:59". Fajr/Sunrise are AM, keep as-is.
-3. Each prayer may have 2 columns (start + jamat). If only 1 column, it is the start time. Descriptive text like "15 minutes after..." is NOT a time — use empty string.
+3. ONLY extract adhan/start times. Set ALL jamat fields to empty string "". Ignore any jamat/congregation/iqamah columns entirely.
 4. gregMonth is 0-indexed (Jan=0). Day names: Mon,Tue,Wed,Thu,Fri,Sat,Sun.
 5. Dates are for the current/upcoming month, never past. Use today's date for context.
 6. title: Islamic month if identifiable (e.g. "Ramadan 1447 AH").
