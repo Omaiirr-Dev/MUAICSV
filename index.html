@@ -357,7 +357,6 @@
       <div class="actions-bar">
         <button class="btn btn-primary" id="preview-btn">Preview</button>
         <button class="btn btn-ntfy" id="push-ntfy-btn">Schedule</button>
-        <button class="btn btn-secondary" id="queue-btn">Queue</button>
         <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
       </div>
     </div>
@@ -416,24 +415,22 @@
       </div>
     </div>
 
-    <!-- Queue (inline, toggled by Queue button) -->
-    <div id="section-queue" class="hidden section">
-      <div class="panel-header">
-        <div class="panel-title">Notification Queue</div>
-      </div>
-      <div id="alert-area-queue"></div>
-      <div class="sched-header">
-        <div>
-          <div class="sched-title">Scheduled</div>
-          <div class="sched-count" id="sched-count">Loading...</div>
-        </div>
-        <div class="sched-actions">
-          <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
-        </div>
-      </div>
-      <div id="sched-list"></div>
-    </div>
+  </div>
 
+  <!-- Queue — always visible, syncs across all users -->
+  <div id="section-queue" class="section" style="margin-top: 20px;">
+    <div class="section-title">Notification Queue</div>
+    <div id="alert-area-queue"></div>
+    <div class="sched-header">
+      <div>
+        <div class="sched-title">Scheduled</div>
+        <div class="sched-count" id="sched-count">Loading...</div>
+      </div>
+      <div class="sched-actions">
+        <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
+      </div>
+    </div>
+    <div id="sched-list"></div>
   </div>
 
 </div>
@@ -899,9 +896,7 @@ function loadData(data) {
   document.getElementById('data-area').classList.remove('hidden');
   document.getElementById('raw-json-panel').classList.add('hidden');
   document.getElementById('section-preview').classList.add('hidden');
-  document.getElementById('section-queue').classList.add('hidden');
   document.getElementById('preview-btn').classList.remove('active');
-  document.getElementById('queue-btn').classList.remove('active');
   showAlert(`Parsed ${data.days.length} days from "${data.title}"`, 'success');
 }
 
@@ -1130,21 +1125,6 @@ document.getElementById('preview-btn').addEventListener('click', () => {
 document.getElementById('preview-prev').addEventListener('click', () => { previewPage--; renderPreviewPage(); });
 document.getElementById('preview-next').addEventListener('click', () => { previewPage++; renderPreviewPage(); });
 
-// Queue — toggle inline below
-document.getElementById('queue-btn').addEventListener('click', () => {
-  const section = document.getElementById('section-queue');
-  const btn = document.getElementById('queue-btn');
-  if (!section.classList.contains('hidden')) {
-    section.classList.add('hidden');
-    btn.classList.remove('active');
-    return;
-  }
-  fetchAndRenderQueue();
-  section.classList.remove('hidden');
-  btn.classList.add('active');
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
-
 // Raw JSON
 document.getElementById('raw-btn').addEventListener('click', () => {
   if (!parsedData) return;
@@ -1181,12 +1161,8 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     parts.push(`${result.pending} pending`);
     showAlert(parts.join(' \u00b7 '), 'success');
 
-    // Show queue section inline after scheduling
+    // Refresh queue display
     await fetchAndRenderQueue();
-    const queueSection = document.getElementById('section-queue');
-    queueSection.classList.remove('hidden');
-    document.getElementById('queue-btn').classList.add('active');
-    queueSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
     showAlert(`Schedule failed: ${e.message}`, 'error');
     console.error(e);
@@ -1221,6 +1197,10 @@ fetch('/api/ai-available').then(r => r.json()).then(d => {
   aiAvailable = d.available;
   if (aiAvailable) document.getElementById('parse-ai').classList.remove('hidden');
 }).catch(() => {});
+
+// Load queue immediately and poll every 15s to stay in sync across all users
+fetchAndRenderQueue();
+setInterval(fetchAndRenderQueue, 15000);
 </script>
 </body>
 </html>
