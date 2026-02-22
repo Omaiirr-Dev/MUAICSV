@@ -664,6 +664,31 @@
     .push-bar .push-info strong {
       color: var(--text);
     }
+
+    /* ── Parse Mode Chooser ─────────────────────────────────── */
+    .parse-chooser {
+      display: flex; gap: 14px; margin-top: 14px;
+    }
+    .parse-option {
+      flex: 1; background: #111; border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px; cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .parse-option:hover { border-color: #444; background: #161616; }
+    .parse-option-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .parse-option-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .parse-option-desc { font-size: 0.75rem; color: #666; }
+    .parse-option.ai { border-color: #3a3020; }
+    .parse-option.ai:hover { border-color: var(--accent); background: #1a1608; }
+    .parse-option.ai .parse-option-title { color: var(--accent); }
+    .parse-loading {
+      text-align: center; padding: 30px; color: #888; font-size: 0.9rem;
+    }
+    .parse-loading .spinner {
+      display: inline-block; width: 20px; height: 20px; border: 2px solid #333;
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -693,6 +718,26 @@
     <div id="paste-area" class="hidden" style="margin-top:10px;">
       <textarea id="csv-paste" rows="6" style="width:100%;background:#0a0a0a;color:#aaa;border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:0.78rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
       <button class="btn btn-secondary" style="margin-top:8px;" id="parse-paste-btn">Parse Pasted CSV</button>
+    </div>
+  </div>
+
+  <!-- Parse Mode Chooser (shown after CSV loaded) -->
+  <div id="parse-chooser-wrap" class="section hidden">
+    <div class="section-title">How should we read this CSV?</div>
+    <div class="parse-chooser">
+      <div class="parse-option" id="parse-script">
+        <div class="parse-option-icon">⚡</div>
+        <div class="parse-option-title">Script Parse</div>
+        <div class="parse-option-desc">Built-in parser for standard MUAI format. Instant &amp; free.</div>
+      </div>
+      <div class="parse-option ai hidden" id="parse-ai">
+        <div class="parse-option-icon">🤖</div>
+        <div class="parse-option-title">AI Parse</div>
+        <div class="parse-option-desc">Uses AI to extract prayer times from any format.</div>
+      </div>
+    </div>
+    <div id="parse-loading" class="parse-loading hidden">
+      <span class="spinner"></span> AI is reading your timetable...
     </div>
   </div>
 
@@ -1211,6 +1256,8 @@ function buildAllNotifications(data) {
 // ─────────────────────────────────────────────
 
 let parsedData = null;
+let pendingCSVText = null;  // raw CSV text waiting for parse mode choice
+let aiAvailable = false;    // set on page load
 
 function showAlert(msg, type = 'info') {
   const el = document.getElementById('alert-area');
@@ -1344,12 +1391,53 @@ function loadData(data) {
 }
 
 function handleCSVText(text) {
+  pendingCSVText = text;
+  // Show parse mode chooser
+  const wrap = document.getElementById('parse-chooser-wrap');
+  wrap.classList.remove('hidden');
+  document.getElementById('parse-loading').classList.add('hidden');
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function scriptParse() {
+  if (!pendingCSVText) return;
+  document.getElementById('parse-chooser-wrap').classList.add('hidden');
   try {
-    const rows = parseCSV(text);
+    const rows = parseCSV(pendingCSVText);
     const data = parsePrayerData(rows);
     loadData(data);
   } catch (err) {
     showAlert(`Parse error: ${err.message}`, 'error');
+    console.error(err);
+  }
+}
+
+async function aiParse() {
+  if (!pendingCSVText) return;
+  const wrap = document.getElementById('parse-chooser-wrap');
+  const loading = document.getElementById('parse-loading');
+  const chooser = wrap.querySelector('.parse-chooser');
+  chooser.classList.add('hidden');
+  loading.classList.remove('hidden');
+
+  try {
+    const resp = await fetch('/api/ai-parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv: pendingCSVText }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: 'unknown' }));
+      throw new Error(err.error || `Server error ${resp.status}`);
+    }
+    const data = await resp.json();
+    wrap.classList.add('hidden');
+    loadData(data);
+    showAlert(`✓ AI parsed ${data.days.length} days from "${data.title}"`, 'success');
+  } catch (err) {
+    loading.classList.add('hidden');
+    chooser.classList.remove('hidden');
+    showAlert(`AI parse failed: ${err.message}`, 'error');
     console.error(err);
   }
 }
@@ -1509,7 +1597,9 @@ document.getElementById('parse-paste-btn').addEventListener('click', () => {
 // Clear
 document.getElementById('clear-btn').addEventListener('click', () => {
   parsedData = null;
+  pendingCSVText = null;
   document.getElementById('data-area').classList.add('hidden');
+  document.getElementById('parse-chooser-wrap').classList.add('hidden');
   document.getElementById('csv-file').value = '';
   document.getElementById('csv-paste').value = '';
 });
@@ -1603,6 +1693,16 @@ document.getElementById('delete-future-btn').addEventListener('click', async () 
     btn.textContent = '🗑 Delete All Future';
   }
 });
+
+// Parse mode chooser
+document.getElementById('parse-script').addEventListener('click', scriptParse);
+document.getElementById('parse-ai').addEventListener('click', aiParse);
+
+// Check AI availability on load
+fetch('/api/ai-available').then(r => r.json()).then(d => {
+  aiAvailable = d.available;
+  if (aiAvailable) document.getElementById('parse-ai').classList.remove('hidden');
+}).catch(() => {});
 
 // Load queue on page start
 fetchAndRenderQueue();

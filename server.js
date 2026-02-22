@@ -33,6 +33,7 @@ const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
                          .split(',').map(s => s.trim());
 const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'CSVMUAITEST';
 const NTFY_SERVER    = process.env.NTFY_SERVER   || 'https://ntfy.sh';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
 // Session tokens: token -> expiry timestamp
 const sessions = new Map();
@@ -308,6 +309,110 @@ const server = http.createServer(async (req, res) => {
   if (!isValidSession(token)) {
     res.writeHead(302, { 'Location': '/login' });
     res.end();
+    return;
+  }
+
+  // ── API: GET /api/ai-available — check if OpenAI key is configured ──────
+  if (url === '/api/ai-available' && req.method === 'GET') {
+    json(res, 200, { available: !!OPENAI_API_KEY });
+    return;
+  }
+
+  // ── API: POST /api/ai-parse — use OpenAI to extract prayer times ──────
+  if (url === '/api/ai-parse' && req.method === 'POST') {
+    if (!OPENAI_API_KEY) { json(res, 501, { error: 'OpenAI API key not configured' }); return; }
+
+    const raw = await parseBody(req);
+    let body;
+    try { body = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
+    if (!body.csv || typeof body.csv !== 'string') { json(res, 400, { error: 'missing csv field' }); return; }
+
+    const systemPrompt = `You are a prayer timetable parser. Given a CSV file containing Islamic prayer times, extract ONLY the data needed and return valid JSON.
+
+Return this exact structure:
+{
+  "title": "Month Name Year AH",
+  "days": [
+    {
+      "day": "Mon",
+      "hijriDate": "1",
+      "gregDate": "3",
+      "gregFull": "Mon, 3 Mar 2025",
+      "gregYear": 2025,
+      "gregMonth": 2,
+      "gregDay": 3,
+      "fajrStart": "5:23",
+      "sunrise": "6:45",
+      "zuhrStart": "12:30",
+      "asrStart": "15:45",
+      "maghribAdhan": "18:15",
+      "ishaStart": "19:45",
+      "fajrJamat": "",
+      "zuhrJamat": "",
+      "asrJamat": "",
+      "ishaJamat": ""
+    }
+  ]
+}
+
+Rules:
+- Extract START times for Fajr, Sunrise, Zuhr, Asr, Maghrib (sunset/adhan), Isha
+- Also extract jamat/congregation times if present, otherwise empty string
+- Times must be in H:MM 24-hour format (e.g. "5:23", "12:30", "17:45")
+- Day names must be 3-letter: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+- gregMonth is 0-indexed (Jan=0, Feb=1, ..., Dec=11)
+- gregFull format: "Day, D Mon YYYY" e.g. "Mon, 3 Mar 2025"
+- If you can identify the Islamic month, set title accordingly
+- Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
+
+    try {
+      const openaiResp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: body.csv },
+          ],
+          temperature: 0,
+        }),
+      });
+
+      if (!openaiResp.ok) {
+        const err = await openaiResp.text().catch(() => '');
+        console.error(`[AI] OpenAI ${openaiResp.status}: ${err}`);
+        json(res, 502, { error: 'OpenAI request failed' });
+        return;
+      }
+
+      const result = await openaiResp.json();
+      const content = result.choices?.[0]?.message?.content || '';
+
+      // Strip markdown fences if the model wraps them despite instructions
+      const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+      let parsed;
+      try { parsed = JSON.parse(cleaned); } catch {
+        console.error('[AI] Failed to parse OpenAI response:', content.slice(0, 500));
+        json(res, 502, { error: 'AI returned invalid JSON' });
+        return;
+      }
+
+      if (!parsed.days || !Array.isArray(parsed.days)) {
+        json(res, 502, { error: 'AI response missing days array' });
+        return;
+      }
+
+      console.log(`[AI] Parsed ${parsed.days.length} days from CSV (model: gpt-4o-mini)`);
+      json(res, 200, parsed);
+    } catch (e) {
+      console.error('[AI] Error:', e.message);
+      json(res, 500, { error: 'AI parse failed: ' + e.message });
+    }
     return;
   }
 
