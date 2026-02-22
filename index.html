@@ -45,19 +45,9 @@
       gap: 10px;
     }
 
-    header .logo {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text);
-      letter-spacing: 0.02em;
-    }
-
+    header .logo { font-size: 0.95rem; font-weight: 600; color: var(--text); letter-spacing: 0.02em; }
     header .logo span { color: var(--accent); }
-
-    header .subtitle {
-      color: var(--text-muted);
-      font-size: 0.7rem;
-    }
+    header .subtitle { color: var(--text-muted); font-size: 0.7rem; }
 
     .main {
       max-width: 1200px;
@@ -67,591 +57,202 @@
 
     /* ── Upload zone ── */
     .upload-zone {
-      border: 1px dashed #3a1818;
-      border-radius: 6px;
-      padding: 24px;
-      text-align: center;
-      background: #120c0c;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      position: relative;
+      border: 1px dashed #3a1818; border-radius: 6px; padding: 24px;
+      text-align: center; background: #120c0c; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; position: relative;
     }
-
-    .upload-zone:hover, .upload-zone.drag-over {
-      border-color: var(--accent);
-      background: #14120a;
-    }
-
-    .upload-zone.accepted {
-      border-color: var(--green);
-      border-style: solid;
-      background: #0c140c;
-    }
-
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: #14120a; }
+    .upload-zone.accepted { border-color: var(--green); border-style: solid; background: #0c140c; }
     .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; pointer-events: none;
     }
-
     .upload-icon { font-size: 1.2rem; margin-bottom: 6px; color: var(--text-muted); }
-
-    .upload-zone h2 {
-      font-size: 0.82rem;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: 2px;
-    }
-
-    .upload-zone p {
-      color: var(--text-muted);
-      font-size: 0.72rem;
-    }
+    .upload-zone h2 { font-size: 0.82rem; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .upload-zone p { color: var(--text-muted); font-size: 0.72rem; }
 
     /* ── Buttons ── */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      font-size: 0.75rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.12s;
-      background: var(--surface2);
-      color: var(--text);
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border);
+      font-size: 0.75rem; font-weight: 500; cursor: pointer;
+      transition: opacity 0.12s; background: var(--surface2); color: var(--text);
     }
-
     .btn:hover { opacity: 0.8; }
     .btn:active { opacity: 0.7; }
     .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-primary { background: var(--accent-dim); color: #ddd; border-color: var(--accent-dim); }
+    .btn-secondary { background: var(--surface2); color: var(--text-muted); border-color: var(--border); }
+    .btn-danger { background: #1a0e0e; color: #c06060; border-color: #3a1818; }
+    .btn-ntfy { background: var(--red); color: #e0c0c0; border-color: #4a1a1a; font-weight: 600; letter-spacing: 0.03em; }
 
-    .btn-primary {
-      background: var(--accent-dim);
-      color: #ddd;
-      border-color: var(--accent-dim);
+    /* ── View nav bar ── */
+    .view-nav {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
     }
+    .view-nav .back-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 0.72rem;
+      transition: color 0.12s;
+    }
+    .view-nav .back-btn:hover { color: var(--text); }
+    .view-nav .view-title { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .view-nav .view-page-info { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); }
 
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text-muted);
-      border-color: var(--border);
+    /* ── Pagination ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; padding: 14px 0; margin-top: 10px;
     }
-
-    .btn-danger {
-      background: #1a0e0e;
-      color: #c06060;
-      border-color: #3a1818;
-    }
-
-    .btn-success {
-      background: #0e1a0e;
-      color: #60c060;
-      border-color: #183a18;
-    }
-
-    .btn-ntfy {
-      background: var(--red);
-      color: #e0c0c0;
-      border-color: #4a1a1a;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-    }
+    .pagination .btn { min-width: 70px; justify-content: center; }
+    .pagination .page-label { font-size: 0.72rem; color: var(--text-muted); }
 
     /* ── Month info bar ── */
     .month-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 10px 14px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      font-size: 0.78rem;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+      padding: 10px 14px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 0.78rem;
     }
-
-    .month-bar .month-title {
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .month-bar .stats {
-      display: flex;
-      gap: 12px;
-      color: var(--text-muted);
-    }
-
+    .month-bar .month-title { font-weight: 600; color: var(--accent); }
+    .month-bar .stats { display: flex; gap: 12px; color: var(--text-muted); }
     .month-bar .stats span strong { color: var(--text); }
 
-    /* ── Actions bar ── */
-    .actions-bar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    .actions-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
 
     /* ── Prayer times table ── */
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.74rem;
-      min-width: 800px;
-    }
-
+    .table-wrap { overflow-x: auto; border-radius: 4px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.74rem; min-width: 800px; }
     thead th {
-      background: var(--surface);
-      padding: 6px 5px;
-      text-align: center;
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      font-size: 0.7rem;
+      background: var(--surface); padding: 6px 5px; text-align: center;
+      font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; font-size: 0.7rem;
     }
-
-    thead .th-group {
-      font-size: 0.62rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-    }
-
+    thead .th-group { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
     thead .th-fajr { color: var(--fajr); }
     thead .th-sunrise { color: var(--sunrise); }
     thead .th-zuhr { color: var(--zuhr); }
     thead .th-asr { color: var(--asr); }
     thead .th-maghrib { color: var(--maghrib); }
     thead .th-isha { color: var(--isha); }
-
-    tbody tr {
-      border-bottom: 1px solid #1a1a1a;
-    }
-
+    tbody tr { border-bottom: 1px solid #1a1a1a; }
     tbody tr:hover { background: #141414; }
-
-    tbody tr.row-fri {
-      background: #111a0e;
-      border-left: 2px solid #3a6a20;
-    }
-
+    tbody tr.row-fri { background: #111a0e; border-left: 2px solid #3a6a20; }
     tbody tr.row-fri:hover { background: #162010; }
-    tbody tr.row-sat { background: #0e1018; }
-    tbody tr.row-sun { background: #0e1018; }
-
-    tbody td {
-      padding: 5px 5px;
-      text-align: center;
-      white-space: nowrap;
-    }
-
+    tbody tr.row-sat, tbody tr.row-sun { background: #0e1018; }
+    tbody td { padding: 5px 5px; text-align: center; white-space: nowrap; }
     .col-day { font-weight: 600; font-size: 0.72rem; }
     .col-day.fri { color: #5a8f2a; }
     .col-day.sat, .col-day.sun { color: #5080b0; }
-
-    .col-date-hijri {
-      color: var(--accent);
-      font-weight: 500;
-      font-size: 0.72rem;
-    }
-
-    .col-date-greg {
-      color: var(--text-muted);
-      font-size: 0.7rem;
-    }
-
-    .time-cell {
-      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-      font-size: 0.74rem;
-    }
-
-    .jamat-cell {
-      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-      font-size: 0.74rem;
-      font-weight: 600;
-    }
-
-    .fajr-time { color: var(--fajr); }
-    .fajr-jamat { color: #80b8d0; }
+    .col-date-hijri { color: var(--accent); font-weight: 500; font-size: 0.72rem; }
+    .col-date-greg { color: var(--text-muted); font-size: 0.7rem; }
+    .time-cell { font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; font-size: 0.74rem; }
+    .jamat-cell { font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; font-size: 0.74rem; font-weight: 600; }
+    .fajr-time { color: var(--fajr); } .fajr-jamat { color: #80b8d0; }
     .sunrise-time { color: var(--sunrise); }
-    .zuhr-time { color: var(--zuhr); }
-    .zuhr-jamat { color: #80c080; }
-    .asr-time { color: var(--asr); }
-    .asr-jamat { color: #c0a060; }
-    .maghrib-time { color: var(--maghrib); }
-    .maghrib-jamat { color: #a080b8; }
-    .isha-time { color: var(--isha); }
-    .isha-jamat { color: #6090c0; }
-
+    .zuhr-time { color: var(--zuhr); } .zuhr-jamat { color: #80c080; }
+    .asr-time { color: var(--asr); } .asr-jamat { color: #c0a060; }
+    .maghrib-time { color: var(--maghrib); } .maghrib-jamat { color: #a080b8; }
+    .isha-time { color: var(--isha); } .isha-jamat { color: #6090c0; }
     .cell-empty { color: #282828; }
 
     /* ── Notification preview ── */
     .preview-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 14px;
-      margin-top: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 14px;
     }
-
-    .preview-panel h3 {
-      color: var(--accent);
-      margin-bottom: 12px;
-      font-size: 0.82rem;
-    }
-
     .notif-day { margin-bottom: 14px; }
-
     .notif-day-header {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 6px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border);
     }
-
     .notif-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 7px 10px;
-      margin-bottom: 4px;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 3px;
+      padding: 7px 10px; margin-bottom: 4px; display: flex; align-items: flex-start; gap: 8px;
     }
-
     .notif-icon { font-size: 0.82rem; flex-shrink: 0; }
     .notif-body { flex: 1; }
-
-    .notif-title {
-      font-size: 0.76rem;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .notif-sub {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-    }
-
-    .notif-countdown {
-      font-size: 0.7rem;
-      color: var(--accent);
-      margin-top: 2px;
-    }
-
-    .notif-firetime {
-      font-size: 0.62rem;
-      color: #444;
-      margin-bottom: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
+    .notif-title { font-size: 0.76rem; font-weight: 500; color: var(--text); }
+    .notif-sub { font-size: 0.7rem; color: var(--text-muted); }
+    .notif-countdown { font-size: 0.7rem; color: var(--accent); margin-top: 2px; }
+    .notif-firetime { font-size: 0.62rem; color: #444; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
 
     /* ── Day filter tabs ── */
-    .day-filter {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
+    .day-filter { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
     .day-tab {
-      padding: 3px 10px;
-      border-radius: 3px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      cursor: pointer;
-      transition: all 0.12s;
+      padding: 3px 10px; border-radius: 3px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted); font-size: 0.7rem;
+      cursor: pointer; transition: all 0.12s;
     }
-
-    .day-tab:hover, .day-tab.active {
-      background: var(--accent-dim);
-      color: var(--text);
-      border-color: var(--accent-dim);
-    }
+    .day-tab:hover, .day-tab.active { background: var(--accent-dim); color: var(--text); border-color: var(--accent-dim); }
 
     /* ── Alerts ── */
-    .alert {
-      padding: 8px 12px;
-      border-radius: 3px;
-      margin-bottom: 12px;
-      font-size: 0.76rem;
-    }
-
-    .alert-error {
-      background: #180c0c;
-      border: 1px solid #3a1818;
-      color: #c08080;
-    }
-
-    .alert-success {
-      background: #0c180c;
-      border: 1px solid #183a18;
-      color: #80c080;
-    }
-
-    .alert-info {
-      background: #0c0e18;
-      border: 1px solid #18283a;
-      color: #80a0c0;
-    }
+    .alert { padding: 8px 12px; border-radius: 3px; margin-bottom: 12px; font-size: 0.76rem; }
+    .alert-error { background: #180c0c; border: 1px solid #3a1818; color: #c08080; }
+    .alert-success { background: #0c180c; border: 1px solid #183a18; color: #80c080; }
+    .alert-info { background: #0c0e18; border: 1px solid #18283a; color: #80a0c0; }
 
     .hidden { display: none !important; }
-
-    /* ── Sections ── */
     .section { margin-bottom: 20px; }
-
     .section-title {
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-      margin-bottom: 8px;
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px;
     }
 
-    /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
 
-    .badge {
-      display: inline-block;
-      padding: 1px 6px;
-      border-radius: 3px;
-      font-size: 0.62rem;
-      font-weight: 600;
-      background: var(--surface2);
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-    }
-
-    .raw-toggle {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      text-decoration: underline;
-      margin-left: auto;
-    }
-
+    .raw-toggle { font-size: 0.68rem; color: var(--text-muted); cursor: pointer; text-decoration: underline; margin-left: auto; }
     .raw-panel {
-      background: #080808;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 10px;
-      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-      font-size: 0.68rem;
-      color: #555;
-      white-space: pre-wrap;
-      word-break: break-all;
-      max-height: 180px;
-      overflow-y: auto;
-      margin-top: 8px;
+      background: #080808; border: 1px solid var(--border); border-radius: 3px; padding: 10px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; font-size: 0.68rem;
+      color: #555; white-space: pre-wrap; word-break: break-all; max-height: 180px;
+      overflow-y: auto; margin-top: 8px;
     }
 
     /* ── Scheduled Notifications ── */
-    .sched-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .sched-header .sched-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .sched-header .sched-count {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-    }
-
-    .sched-actions {
-      margin-left: auto;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
+    .sched-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+    .sched-header .sched-title { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .sched-header .sched-count { font-size: 0.72rem; color: var(--text-muted); }
+    .sched-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
     .sched-empty {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.76rem;
-      padding: 24px;
-      border: 1px dashed var(--border);
-      border-radius: 4px;
+      text-align: center; color: var(--text-muted); font-size: 0.76rem;
+      padding: 24px; border: 1px dashed var(--border); border-radius: 4px;
     }
-
-    .sched-day {
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      margin-bottom: 4px;
-      overflow: hidden;
-    }
-
+    .sched-day { border: 1px solid var(--border); border-radius: 4px; margin-bottom: 4px; overflow: hidden; }
     .sched-day-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 12px;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.1s;
-      font-size: 0.76rem;
+      display: flex; align-items: center; gap: 10px; padding: 7px 12px;
+      cursor: pointer; user-select: none; transition: background 0.1s; font-size: 0.76rem;
     }
-
     .sched-day-header:hover { background: #141414; }
-
-    .sched-day.past .sched-day-header {
-      background: #0c140c;
-      border-left: 2px solid var(--green);
-    }
-
+    .sched-day.past .sched-day-header { background: #0c140c; border-left: 2px solid var(--green); }
     .sched-day.past .sched-day-header:hover { background: #0e180e; }
-
-    .sched-day.upcoming .sched-day-header {
-      background: #14100a;
-      border-left: 2px solid var(--orange);
-    }
-
+    .sched-day.upcoming .sched-day-header { background: #14100a; border-left: 2px solid var(--orange); }
     .sched-day.upcoming .sched-day-header:hover { background: #18140c; }
-
-    .sched-day-label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--text);
-      flex: 1;
-    }
-
+    .sched-day-label { font-size: 0.78rem; font-weight: 600; color: var(--text); flex: 1; }
     .sched-day.past .sched-day-label { color: #60b060; }
     .sched-day.upcoming .sched-day-label { color: #c09030; }
-
-    .sched-day-meta {
-      font-size: 0.66rem;
-      color: var(--text-muted);
-    }
-
-    .sched-day-chevron {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      transition: transform 0.15s;
-    }
-
+    .sched-day-meta { font-size: 0.66rem; color: var(--text-muted); }
+    .sched-day-chevron { font-size: 0.6rem; color: var(--text-muted); transition: transform 0.15s; }
     .sched-day.open .sched-day-chevron { transform: rotate(90deg); }
-
-    .sched-day-body {
-      display: none;
-      padding: 8px 12px 10px;
-      background: #0c0c0c;
-      border-top: 1px solid var(--border);
-    }
-
+    .sched-day-body { display: none; padding: 8px 12px 10px; background: #0c0c0c; border-top: 1px solid var(--border); }
     .sched-day.open .sched-day-body { display: block; }
-
-    .sched-notif-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 5px 0;
-      border-bottom: 1px solid #161616;
-      font-size: 0.74rem;
-    }
-
+    .sched-notif-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid #161616; font-size: 0.74rem; }
     .sched-notif-row:last-child { border-bottom: none; }
-
-    .sched-notif-icon {
-      font-size: 0.78rem;
-      flex-shrink: 0;
-      width: 20px;
-      text-align: center;
-    }
-
+    .sched-notif-icon { font-size: 0.78rem; flex-shrink: 0; width: 20px; text-align: center; }
     .sched-notif-info { flex: 1; }
-
-    .sched-notif-title {
-      font-size: 0.74rem;
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .sched-notif-detail {
-      font-size: 0.66rem;
-      color: var(--text-muted);
-      margin-top: 1px;
-    }
-
-    .sched-notif-time {
-      font-size: 0.66rem;
-      color: #444;
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    .sched-notif-time .utc {
-      display: block;
-      font-size: 0.6rem;
-      color: #333;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-
+    .sched-notif-title { font-size: 0.74rem; font-weight: 500; color: var(--text); }
+    .sched-notif-detail { font-size: 0.66rem; color: var(--text-muted); margin-top: 1px; }
+    .sched-notif-time { font-size: 0.66rem; color: #444; text-align: right; white-space: nowrap; }
+    .sched-notif-time .utc { display: block; font-size: 0.6rem; color: #333; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
     .status-dot.past { background: var(--green); }
     .status-dot.upcoming { background: var(--orange); }
 
-    .push-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .push-bar .push-info {
-      flex: 1;
-      font-size: 0.74rem;
-      color: var(--text-muted);
-    }
-
-    .push-bar .push-info strong { color: var(--text); }
-
     /* ── Parse Mode Chooser ── */
-    .parse-chooser {
-      display: flex; gap: 8px; margin-top: 8px;
-    }
+    .parse-chooser { display: flex; gap: 8px; margin-top: 8px; }
     .parse-option {
       flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 4px;
       padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;
@@ -664,9 +265,7 @@
     .parse-option.ai { border-color: #1e1a12; }
     .parse-option.ai:hover { border-color: var(--accent-dim); background: #12100a; }
     .parse-option.ai .parse-option-title { color: var(--accent); }
-    .parse-loading {
-      text-align: center; padding: 16px; color: #555; font-size: 0.76rem;
-    }
+    .parse-loading { text-align: center; padding: 16px; color: #555; font-size: 0.76rem; }
     .parse-loading .spinner {
       display: inline-block; width: 12px; height: 12px; border: 1.5px solid #222;
       border-top-color: var(--accent); border-radius: 50%;
@@ -674,19 +273,10 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Date range bar ── */
     .date-range-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 8px 14px;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-top: 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+      padding: 8px 14px; font-size: 0.72rem; color: var(--text-muted);
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px;
     }
   </style>
 </head>
@@ -702,141 +292,149 @@
 
 <div class="main">
 
-  <!-- Upload Section -->
-  <div class="section" id="section-upload">
-    <div class="section-title">Import CSV</div>
-    <div class="upload-zone" id="drop-zone">
-      <input type="file" id="csv-file" accept=".csv" />
-      <div class="upload-icon"></div>
-      <h2>Drop your prayer times CSV here</h2>
-      <p>or click to browse</p>
-    </div>
-    <div style="margin-top:6px; text-align:right;">
-      <span class="raw-toggle" id="paste-toggle">or paste CSV text</span>
-    </div>
-    <div id="paste-area" class="hidden" style="margin-top:8px;">
-      <textarea id="csv-paste" rows="4" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
-      <button class="btn btn-secondary" style="margin-top:6px;" id="parse-paste-btn">Parse pasted CSV</button>
-    </div>
-  </div>
+  <!-- ═══ VIEW: MAIN ═══ -->
+  <div id="view-main">
 
-  <!-- Parse Mode Chooser (shown after CSV loaded) -->
-  <div id="parse-chooser-wrap" class="section hidden">
-    <div class="section-title">Parse method</div>
-    <div class="parse-chooser">
-      <div class="parse-option" id="parse-script">
-        <div class="parse-option-icon">&gt;_</div>
-        <div>
-          <div class="parse-option-title">Script Parse</div>
-          <div class="parse-option-desc">Standard MUAI format</div>
+    <div class="section" id="section-upload">
+      <div class="section-title">Import CSV</div>
+      <div class="upload-zone" id="drop-zone">
+        <input type="file" id="csv-file" accept=".csv" />
+        <div class="upload-icon"></div>
+        <h2>Drop your prayer times CSV here</h2>
+        <p>or click to browse</p>
+      </div>
+      <div style="margin-top:6px; text-align:right;">
+        <span class="raw-toggle" id="paste-toggle">or paste CSV text</span>
+      </div>
+      <div id="paste-area" class="hidden" style="margin-top:8px;">
+        <textarea id="csv-paste" rows="4" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
+        <button class="btn btn-secondary" style="margin-top:6px;" id="parse-paste-btn">Parse pasted CSV</button>
+      </div>
+    </div>
+
+    <div id="parse-chooser-wrap" class="section hidden">
+      <div class="section-title">Parse method</div>
+      <div class="parse-chooser">
+        <div class="parse-option" id="parse-script">
+          <div class="parse-option-icon">&gt;_</div>
+          <div>
+            <div class="parse-option-title">Script Parse</div>
+            <div class="parse-option-desc">Standard MUAI format</div>
+          </div>
+        </div>
+        <div class="parse-option ai hidden" id="parse-ai">
+          <div class="parse-option-icon">AI</div>
+          <div>
+            <div class="parse-option-title">AI Parse</div>
+            <div class="parse-option-desc">Any CSV format</div>
+          </div>
         </div>
       </div>
-      <div class="parse-option ai hidden" id="parse-ai">
-        <div class="parse-option-icon">AI</div>
-        <div>
-          <div class="parse-option-title">AI Parse</div>
-          <div class="parse-option-desc">Any CSV format</div>
+      <div id="parse-loading" class="parse-loading hidden">
+        <span class="spinner"></span> AI is reading your timetable...
+      </div>
+    </div>
+
+    <div id="alert-area"></div>
+
+    <div id="data-area" class="hidden">
+      <div class="section">
+        <div class="section-title">Parsed Month</div>
+        <div class="month-bar">
+          <div class="month-title" id="month-title">&mdash;</div>
+          <div class="stats">
+            <span><strong id="stat-days">0</strong> days</span>
+            <span><strong id="stat-fri">0</strong> Fri</span>
+          </div>
+          <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">Clear</button>
+        </div>
+        <div class="date-range-bar" id="date-range-bar">
+          <span style="color:#444">Range:</span>
+          <span id="stat-start-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
+          <span style="color:#333">&rarr;</span>
+          <span id="stat-end-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
+          <span style="color:#333;margin-left:6px;">&middot;</span>
+          <span id="stat-total-notifs" style="color:var(--accent);font-weight:600;">0 notifications</span>
+          <span style="color:#333">across</span>
+          <span id="stat-days2" style="color:var(--accent);font-weight:600;">0 days</span>
         </div>
       </div>
-    </div>
-    <div id="parse-loading" class="parse-loading hidden">
-      <span class="spinner"></span> AI is reading your timetable...
-    </div>
-  </div>
 
-  <!-- Alert area -->
-  <div id="alert-area"></div>
-
-  <!-- Parsed data area (hidden until CSV loaded) -->
-  <div id="data-area" class="hidden">
-
-    <!-- Month info -->
-    <div class="section">
-      <div class="section-title">Parsed Month</div>
-      <div class="month-bar">
-        <div class="month-title" id="month-title">&mdash;</div>
-        <div class="stats">
-          <span><strong id="stat-days">0</strong> days</span>
-          <span><strong id="stat-fri">0</strong> Fri</span>
+      <div class="section">
+        <div class="section-title">Actions</div>
+        <div class="actions-bar">
+          <button class="btn btn-primary" id="preview-btn">Preview</button>
+          <button class="btn btn-ntfy" id="push-ntfy-btn">Push to NTFY</button>
+          <button class="btn btn-secondary" id="queue-btn">Queue</button>
+          <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
         </div>
-        <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">Clear</button>
       </div>
-      <div class="date-range-bar" id="date-range-bar">
-        <span style="color:#444">Range:</span>
-        <span id="stat-start-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
-        <span style="color:#333">&rarr;</span>
-        <span id="stat-end-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
-        <span style="color:#333;margin-left:6px;">&middot;</span>
-        <span id="stat-total-notifs" style="color:var(--accent);font-weight:600;">0 notifications</span>
-        <span style="color:#333">across</span>
-        <span id="stat-days2" style="color:var(--accent);font-weight:600;">0 days</span>
+
+      <div class="section">
+        <div class="section-title">Prayer Times</div>
+        <div class="table-wrap">
+          <table id="prayer-table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="min-width:36px;">Day</th>
+                <th rowspan="2" style="min-width:32px;">Hijri</th>
+                <th rowspan="2" style="min-width:44px;">Date</th>
+                <th colspan="2" class="th-group th-fajr">Fajr</th>
+                <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
+                <th colspan="2" class="th-group th-zuhr">Zuhr</th>
+                <th colspan="2" class="th-group th-asr">Asr</th>
+                <th colspan="2" class="th-group th-maghrib">Maghrib</th>
+                <th colspan="2" class="th-group th-isha">Isha</th>
+              </tr>
+              <tr>
+                <th class="th-fajr">Start</th>
+                <th class="th-fajr">Jamat</th>
+                <th class="th-zuhr">Start</th>
+                <th class="th-zuhr">Jamat</th>
+                <th class="th-asr">Start</th>
+                <th class="th-asr">Jamat</th>
+                <th class="th-maghrib">Adhan</th>
+                <th class="th-maghrib">Jamat</th>
+                <th class="th-isha">Start</th>
+                <th class="th-isha">Jamat</th>
+              </tr>
+            </thead>
+            <tbody id="prayer-tbody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
 
-    <!-- Actions -->
-    <div class="section">
-      <div class="section-title">Actions</div>
-      <div class="actions-bar">
-        <button class="btn btn-primary" id="preview-btn">Preview</button>
-        <button class="btn btn-ntfy" id="push-ntfy-btn">Push to NTFY</button>
-        <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
+      <div id="raw-json-panel" class="hidden section">
+        <div class="section-title">Raw Parsed JSON</div>
+        <div class="raw-panel" id="raw-json-content"></div>
       </div>
-    </div>
-
-    <!-- Prayer times table -->
-    <div class="section">
-      <div class="section-title">Prayer Times</div>
-      <div class="table-wrap">
-        <table id="prayer-table">
-          <thead>
-            <tr>
-              <th rowspan="2" style="min-width:36px;">Day</th>
-              <th rowspan="2" style="min-width:32px;">Hijri</th>
-              <th rowspan="2" style="min-width:44px;">Date</th>
-              <th colspan="2" class="th-group th-fajr">Fajr</th>
-              <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
-              <th colspan="2" class="th-group th-zuhr">Zuhr</th>
-              <th colspan="2" class="th-group th-asr">Asr</th>
-              <th colspan="2" class="th-group th-maghrib">Maghrib</th>
-              <th colspan="2" class="th-group th-isha">Isha</th>
-            </tr>
-            <tr>
-              <th class="th-fajr">Start</th>
-              <th class="th-fajr">Jamat</th>
-              <th class="th-zuhr">Start</th>
-              <th class="th-zuhr">Jamat</th>
-              <th class="th-asr">Start</th>
-              <th class="th-asr">Jamat</th>
-              <th class="th-maghrib">Adhan</th>
-              <th class="th-maghrib">Jamat</th>
-              <th class="th-isha">Start</th>
-              <th class="th-isha">Jamat</th>
-            </tr>
-          </thead>
-          <tbody id="prayer-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Raw JSON panel -->
-    <div id="raw-json-panel" class="hidden section">
-      <div class="section-title">Raw Parsed JSON</div>
-      <div class="raw-panel" id="raw-json-content"></div>
-    </div>
-
-    <!-- Notification preview -->
-    <div id="preview-panel-wrap" class="hidden section">
-      <div class="section-title">Notification Preview</div>
-      <div class="day-filter" id="day-filter-tabs"></div>
-      <div class="preview-panel" id="preview-container"></div>
     </div>
 
   </div>
 
-  <!-- Scheduled Notifications Section -->
-  <div class="section" id="section-scheduled">
-    <div class="section-title">Notification Queue</div>
+  <!-- ═══ VIEW: PREVIEW ═══ -->
+  <div id="view-preview" class="hidden">
+    <div class="view-nav">
+      <button class="back-btn" id="preview-back">Back</button>
+      <div class="view-title">Notification Preview</div>
+      <div class="view-page-info" id="preview-page-info"></div>
+    </div>
+    <div class="day-filter" id="day-filter-tabs"></div>
+    <div class="preview-panel" id="preview-container"></div>
+    <div class="pagination">
+      <button class="btn btn-secondary" id="preview-prev">Prev</button>
+      <span class="page-label" id="preview-page-label"></span>
+      <button class="btn btn-secondary" id="preview-next">Next</button>
+    </div>
+  </div>
 
+  <!-- ═══ VIEW: QUEUE ═══ -->
+  <div id="view-queue" class="hidden">
+    <div class="view-nav">
+      <button class="back-btn" id="queue-back">Back</button>
+      <div class="view-title">Notification Queue</div>
+    </div>
+    <div id="alert-area-queue"></div>
     <div class="sched-header">
       <div>
         <div class="sched-title">Scheduled</div>
@@ -846,13 +444,24 @@
         <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
       </div>
     </div>
-
     <div id="sched-list"></div>
   </div>
 
 </div>
 
 <script>
+// ─────────────────────────────────────────────
+// VIEW SWITCHING
+// ─────────────────────────────────────────────
+
+function showView(name) {
+  document.getElementById('view-main').classList.add('hidden');
+  document.getElementById('view-preview').classList.add('hidden');
+  document.getElementById('view-queue').classList.add('hidden');
+  document.getElementById('view-' + name).classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
 // ─────────────────────────────────────────────
 // CSV PARSER
 // ─────────────────────────────────────────────
@@ -952,10 +561,7 @@ function parsePrayerData(rows) {
   if (dataStart === -1) throw new Error('Could not find prayer time data rows. Is this the right CSV format?');
 
   const days = [];
-  const last = {
-    fajrJamat: '', zuhrJamat: '', asrJamat: '',
-    maghribJamat: '', ishaJamat: ''
-  };
+  const last = { fajrJamat: '', zuhrJamat: '', asrJamat: '', maghribJamat: '', ishaJamat: '' };
 
   const GREG_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const GREG_MONTH_LOWER = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
@@ -1032,10 +638,8 @@ function parsePrayerData(rows) {
 
     const gregMonthStr = GREG_MONTH_NAMES[runningMonth] || '?';
     const gregFull = `${dayName}, ${gregDayNum} ${gregMonthStr} ${runningYear}`;
-
-    // Store numeric date for UTC conversion
     const gregYear  = runningYear;
-    const gregMonth = runningMonth; // 0-based
+    const gregMonth = runningMonth;
     const gregDay   = gregDayNum;
 
     const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
@@ -1044,36 +648,18 @@ function parsePrayerData(rows) {
     const maghribJamat = resolveTime(r[12], last.maghribJamat);
     const ishaJamat    = resolveTime(r[14], last.ishaJamat);
 
-    last.fajrJamat    = fajrJamat;
-    last.zuhrJamat    = zuhrJamat;
-    last.asrJamat     = asrJamat;
-    last.maghribJamat = maghribJamat;
-    last.ishaJamat    = ishaJamat;
+    last.fajrJamat = fajrJamat; last.zuhrJamat = zuhrJamat; last.asrJamat = asrJamat;
+    last.maghribJamat = maghribJamat; last.ishaJamat = ishaJamat;
 
     days.push({
-      day:           dayName,
-      hijriDate:     r[2] || '',
-      gregDate:      gregRaw,
-      gregFull:      gregFull,
-      gregYear,
-      gregMonth,
-      gregDay,
-      fajrStart:     r[4] || '',
-      fajrJamat,
-      sunrise:       r[6] || '',
-      zuhrStart:     r[7] || '',
-      zuhrJamat,
-      asrStart:      r[9] || '',
-      asrJamat,
-      maghribAdhan:  r[11] || '',
-      maghribJamat,
-      ishaStart:     r[13] || '',
-      ishaJamat,
+      day: dayName, hijriDate: r[2] || '', gregDate: gregRaw, gregFull, gregYear, gregMonth, gregDay,
+      fajrStart: r[4] || '', fajrJamat, sunrise: r[6] || '',
+      zuhrStart: r[7] || '', zuhrJamat, asrStart: r[9] || '', asrJamat,
+      maghribAdhan: r[11] || '', maghribJamat, ishaStart: r[13] || '', ishaJamat,
     });
   }
 
   if (days.length === 0) throw new Error('No prayer day rows found. Check CSV structure.');
-
   return { title, days };
 }
 
@@ -1123,27 +709,16 @@ function fmtTime(t) {
   return `${h}:${m} ${ampm}`;
 }
 
-// Convert a prayer time string (e.g. "5:23") for a given calendar date to UTC ISO string.
-// Uses the same sequential unwrapping as resolveSequential.
-// minsResolved: the already-resolved total minutes (from resolveSequential)
 function resolvedMinsToUTC(gregYear, gregMonth, gregDay, resolvedMins) {
-  // resolvedMins may be > 1440 if wrap added 720; clamp to real hour/min
   const totalMins = resolvedMins % (24 * 60);
   const h = Math.floor(totalMins / 60);
   const m = totalMins % 60;
-
-  // Build a candidate UTC date assuming UK local = resolved H:MM on this calendar day.
-  // Use Intl to figure out the actual UTC offset for London on that date.
   const guessUTC = Date.UTC(gregYear, gregMonth, gregDay, h, m, 0, 0);
-
   const londonParts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Europe/London',
-    hour: 'numeric', minute: 'numeric', hour12: false,
+    timeZone: 'Europe/London', hour: 'numeric', minute: 'numeric', hour12: false,
   }).formatToParts(new Date(guessUTC));
-
   const londonH = parseInt(londonParts.find(p => p.type === 'hour').value);
   const londonM = parseInt(londonParts.find(p => p.type === 'minute').value);
-
   const offsetMins = (londonH * 60 + londonM) - (h * 60 + m);
   const utcMs = guessUTC - offsetMins * 60 * 1000;
   return new Date(utcMs).toISOString();
@@ -1158,99 +733,28 @@ function formatEngDate(day) {
 }
 
 function buildNotifications(day) {
-  const notes = [];
-
-  const rawTimes = [
-    timeTo24(day.fajrStart),
-    timeTo24(day.zuhrStart),
-    timeTo24(day.asrStart),
-    timeTo24(day.maghribAdhan),
-    timeTo24(day.ishaStart),
-  ];
-
+  const rawTimes = [timeTo24(day.fajrStart), timeTo24(day.zuhrStart), timeTo24(day.asrStart), timeTo24(day.maghribAdhan), timeTo24(day.ishaStart)];
   const [fajrM, zuhrM, asrM, maghribM, ishaM] = resolveSequential(rawTimes);
-
-  function getFireUTC(resolvedMins) {
-    if (resolvedMins === null) return null;
-    return resolvedMinsToUTC(day.gregYear, day.gregMonth, day.gregDay, resolvedMins);
-  }
+  function getFireUTC(m) { return m === null ? null : resolvedMinsToUTC(day.gregYear, day.gregMonth, day.gregDay, m); }
 
   const prayers = [
-    {
-      icon: '\ud83d\udd4b',
-      title: `Fajr has begun`,
-      details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '',
-      countdown: formatDiff(minutesBetween(fajrM, zuhrM)),
-      nextName: 'Zuhr',
-      nextTime: fmtTime(day.zuhrStart),
-      fireTimeFmt: fmtTime(day.fajrStart),
-      fireUTC: getFireUTC(fajrM),
-    },
-    {
-      icon: '\u2600\ufe0f',
-      title: `Zuhr has begun${day.day === 'Fri' ? ' \u00b7 Jumu\'ah' : ''}`,
-      details: '',
-      countdown: formatDiff(minutesBetween(zuhrM, asrM)),
-      nextName: 'Asr',
-      nextTime: fmtTime(day.asrStart),
-      fireTimeFmt: fmtTime(day.zuhrStart),
-      fireUTC: getFireUTC(zuhrM),
-    },
-    {
-      icon: '\u26c5',
-      title: `Asr has begun`,
-      details: '',
-      countdown: formatDiff(minutesBetween(asrM, maghribM)),
-      nextName: 'Maghrib',
-      nextTime: fmtTime(day.maghribAdhan),
-      fireTimeFmt: fmtTime(day.asrStart),
-      fireUTC: getFireUTC(asrM),
-    },
-    {
-      icon: '\ud83c\udf05',
-      title: `Maghrib has begun`,
-      details: '',
-      countdown: formatDiff(minutesBetween(maghribM, ishaM)),
-      nextName: 'Isha',
-      nextTime: fmtTime(day.ishaStart),
-      fireTimeFmt: fmtTime(day.maghribAdhan),
-      fireUTC: getFireUTC(maghribM),
-    },
-    {
-      icon: '\ud83c\udf19',
-      title: `Isha has begun`,
-      details: '',
-      countdown: null,
-      nextName: null,
-      nextTime: null,
-      fireTimeFmt: fmtTime(day.ishaStart),
-      fireUTC: getFireUTC(ishaM),
-    },
+    { icon: '\ud83d\udd4b', title: 'Fajr has begun', details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '', countdown: formatDiff(minutesBetween(fajrM, zuhrM)), nextName: 'Zuhr', nextTime: fmtTime(day.zuhrStart), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM) },
+    { icon: '\u2600\ufe0f', title: `Zuhr has begun${day.day === 'Fri' ? ' \u00b7 Jumu\'ah' : ''}`, details: '', countdown: formatDiff(minutesBetween(zuhrM, asrM)), nextName: 'Asr', nextTime: fmtTime(day.asrStart), fireTimeFmt: fmtTime(day.zuhrStart), fireUTC: getFireUTC(zuhrM) },
+    { icon: '\u26c5', title: 'Asr has begun', details: '', countdown: formatDiff(minutesBetween(asrM, maghribM)), nextName: 'Maghrib', nextTime: fmtTime(day.maghribAdhan), fireTimeFmt: fmtTime(day.asrStart), fireUTC: getFireUTC(asrM) },
+    { icon: '\ud83c\udf05', title: 'Maghrib has begun', details: '', countdown: formatDiff(minutesBetween(maghribM, ishaM)), nextName: 'Isha', nextTime: fmtTime(day.ishaStart), fireTimeFmt: fmtTime(day.maghribAdhan), fireUTC: getFireUTC(maghribM) },
+    { icon: '\ud83c\udf19', title: 'Isha has begun', details: '', countdown: null, nextName: null, nextTime: null, fireTimeFmt: fmtTime(day.ishaStart), fireUTC: getFireUTC(ishaM) },
   ];
 
-  for (const p of prayers) {
-    notes.push({
-      icon: p.icon,
-      title: p.title,
-      details: p.details,
-      countdown: p.countdown ? `${p.countdown} until ${p.nextName} \u00b7 ${p.nextTime}` : null,
-      fireTimeFmt: p.fireTimeFmt,
-      fireUTC: p.fireUTC,
-      priority: 'urgent',
-      gregFull: day.gregFull,
-    });
-  }
-
-  return notes;
+  return prayers.map(p => ({
+    icon: p.icon, title: p.title, details: p.details,
+    countdown: p.countdown ? `${p.countdown} until ${p.nextName} \u00b7 ${p.nextTime}` : null,
+    fireTimeFmt: p.fireTimeFmt, fireUTC: p.fireUTC, priority: 'urgent', gregFull: day.gregFull,
+  }));
 }
 
 function buildAllNotifications(data) {
   const all = [];
-  for (const day of data.days) {
-    for (const n of buildNotifications(day)) {
-      all.push(n);
-    }
-  }
+  for (const day of data.days) for (const n of buildNotifications(day)) all.push(n);
   return all;
 }
 
@@ -1259,8 +763,11 @@ function buildAllNotifications(data) {
 // ─────────────────────────────────────────────
 
 let parsedData = null;
-let pendingCSVText = null;  // raw CSV text waiting for parse mode choice
-let aiAvailable = false;    // set on page load
+let pendingCSVText = null;
+let aiAvailable = false;
+let previewPage = 0;
+let previewFilter = 'all';
+const DAYS_PER_PAGE = 7;
 
 function showAlert(msg, type = 'info') {
   const el = document.getElementById('alert-area');
@@ -1271,38 +778,25 @@ function showAlert(msg, type = 'info') {
 function renderTable(data) {
   const tbody = document.getElementById('prayer-tbody');
   tbody.innerHTML = '';
-
   for (const d of data.days) {
     const tr = document.createElement('tr');
     const isDay = d.day.toLowerCase();
     if (isDay === 'fri') tr.className = 'row-fri';
     else if (isDay === 'sat') tr.className = 'row-sat';
     else if (isDay === 'sun') tr.className = 'row-sun';
-
     const dayClass = ['fri','sat','sun'].includes(isDay) ? isDay : '';
-
-    function tc(val, cls) {
-      return `<td class="time-cell ${cls}">${val || '<span class="cell-empty">\u2014</span>'}</td>`;
-    }
-    function jc(val, cls) {
-      return `<td class="jamat-cell ${cls}">${val || '<span class="cell-empty">\u2014</span>'}</td>`;
-    }
-
+    function tc(val, cls) { return `<td class="time-cell ${cls}">${val || '<span class="cell-empty">\u2014</span>'}</td>`; }
+    function jc(val, cls) { return `<td class="jamat-cell ${cls}">${val || '<span class="cell-empty">\u2014</span>'}</td>`; }
     tr.innerHTML = `
       <td class="col-day ${dayClass}">${d.day}</td>
       <td class="col-date-hijri">${d.hijriDate}</td>
       <td class="col-date-greg">${d.gregDate}</td>
-      ${tc(d.fajrStart,    'fajr-time')}
-      ${jc(d.fajrJamat,   'fajr-jamat')}
-      ${tc(d.sunrise,      'sunrise-time')}
-      ${tc(d.zuhrStart,    'zuhr-time')}
-      ${jc(d.zuhrJamat,   'zuhr-jamat')}
-      ${tc(d.asrStart,     'asr-time')}
-      ${jc(d.asrJamat,    'asr-jamat')}
-      ${tc(d.maghribAdhan, 'maghrib-time')}
-      ${jc(d.maghribJamat,'maghrib-jamat')}
-      ${tc(d.ishaStart,    'isha-time')}
-      ${jc(d.ishaJamat,   'isha-jamat')}
+      ${tc(d.fajrStart,'fajr-time')} ${jc(d.fajrJamat,'fajr-jamat')}
+      ${tc(d.sunrise,'sunrise-time')}
+      ${tc(d.zuhrStart,'zuhr-time')} ${jc(d.zuhrJamat,'zuhr-jamat')}
+      ${tc(d.asrStart,'asr-time')} ${jc(d.asrJamat,'asr-jamat')}
+      ${tc(d.maghribAdhan,'maghrib-time')} ${jc(d.maghribJamat,'maghrib-jamat')}
+      ${tc(d.ishaStart,'isha-time')} ${jc(d.ishaJamat,'isha-jamat')}
     `;
     tbody.appendChild(tr);
   }
@@ -1310,30 +804,41 @@ function renderTable(data) {
 
 function renderMonthBar(data) {
   document.getElementById('month-title').textContent = data.title;
-  document.getElementById('stat-days').textContent  = data.days.length;
-  document.getElementById('stat-fri').textContent   = data.days.filter(d => d.day === 'Fri').length;
+  document.getElementById('stat-days').textContent = data.days.length;
+  document.getElementById('stat-fri').textContent = data.days.filter(d => d.day === 'Fri').length;
   const first = data.days[0];
-  const last  = data.days[data.days.length - 1];
+  const last = data.days[data.days.length - 1];
   document.getElementById('stat-start-eng').textContent = first.gregFull || `${first.day} ${first.gregDate}`;
-  document.getElementById('stat-end-eng').textContent   = last.gregFull  || `${last.day} ${last.gregDate}`;
+  document.getElementById('stat-end-eng').textContent = last.gregFull || `${last.day} ${last.gregDate}`;
   document.getElementById('stat-total-notifs').textContent = `${data.days.length * 5} notifications`;
   document.getElementById('stat-days2').textContent = `${data.days.length} days`;
 }
 
-function renderNotificationPreview(data, filterDay = 'all') {
+// ── Preview with pagination ──
+
+function getFilteredDays() {
+  if (!parsedData) return [];
+  return previewFilter === 'all' ? parsedData.days : parsedData.days.filter(d => d.day === previewFilter);
+}
+
+function renderPreviewPage() {
+  const filtered = getFilteredDays();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / DAYS_PER_PAGE));
+  if (previewPage >= totalPages) previewPage = totalPages - 1;
+  if (previewPage < 0) previewPage = 0;
+
+  const start = previewPage * DAYS_PER_PAGE;
+  const pageDays = filtered.slice(start, start + DAYS_PER_PAGE);
+
   const container = document.getElementById('preview-container');
   container.innerHTML = '';
 
-  const filtered = filterDay === 'all' ? data.days : data.days.filter(d => d.day === filterDay);
-
-  for (const day of filtered) {
+  for (const day of pageDays) {
     const notes = buildNotifications(day);
     const dayDiv = document.createElement('div');
     dayDiv.className = 'notif-day';
-
     const engDate = formatEngDate(day);
     dayDiv.innerHTML = `<div class="notif-day-header">${engDate}</div>`;
-
     for (const n of notes) {
       const card = document.createElement('div');
       card.className = 'notif-card';
@@ -1348,18 +853,25 @@ function renderNotificationPreview(data, filterDay = 'all') {
       `;
       dayDiv.appendChild(card);
     }
-
     container.appendChild(dayDiv);
   }
+
+  // Update page info
+  const startDay = start + 1;
+  const endDay = Math.min(start + DAYS_PER_PAGE, filtered.length);
+  document.getElementById('preview-page-info').textContent = `Days ${startDay}\u2013${endDay} of ${filtered.length}`;
+  document.getElementById('preview-page-label').textContent = `Page ${previewPage + 1} of ${totalPages}`;
+  document.getElementById('preview-prev').disabled = previewPage === 0;
+  document.getElementById('preview-next').disabled = previewPage >= totalPages - 1;
 }
 
-function renderDayFilterTabs(data) {
-  const uniqueDays = [...new Set(data.days.map(d => d.day))];
+function renderDayFilterTabs() {
+  const uniqueDays = [...new Set(parsedData.days.map(d => d.day))];
   const tabs = document.getElementById('day-filter-tabs');
   tabs.innerHTML = '';
 
   const allTab = document.createElement('div');
-  allTab.className = 'day-tab active';
+  allTab.className = 'day-tab' + (previewFilter === 'all' ? ' active' : '');
   allTab.textContent = 'All';
   allTab.dataset.day = 'all';
   tabs.appendChild(allTab);
@@ -1367,35 +879,37 @@ function renderDayFilterTabs(data) {
   for (const d of DAY_NAMES) {
     if (uniqueDays.includes(d)) {
       const tab = document.createElement('div');
-      tab.className = 'day-tab';
+      tab.className = 'day-tab' + (previewFilter === d ? ' active' : '');
       tab.textContent = d;
       tab.dataset.day = d;
       tabs.appendChild(tab);
     }
   }
 
-  tabs.addEventListener('click', e => {
+  tabs.onclick = e => {
     const tab = e.target.closest('.day-tab');
     if (!tab) return;
     tabs.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    renderNotificationPreview(parsedData, tab.dataset.day);
-  });
+    previewFilter = tab.dataset.day;
+    previewPage = 0;
+    renderPreviewPage();
+  };
 }
+
+// ── Remaining renderers ──
 
 function loadData(data) {
   parsedData = data;
   renderMonthBar(data);
   renderTable(data);
   document.getElementById('data-area').classList.remove('hidden');
-  document.getElementById('preview-panel-wrap').classList.add('hidden');
   document.getElementById('raw-json-panel').classList.add('hidden');
   showAlert(`Parsed ${data.days.length} days from "${data.title}"`, 'success');
 }
 
 function handleCSVText(text) {
   pendingCSVText = text;
-  // Show parse mode chooser — reset inner state in case of re-upload
   const wrap = document.getElementById('parse-chooser-wrap');
   wrap.classList.remove('hidden');
   wrap.querySelector('.parse-chooser').classList.remove('hidden');
@@ -1423,11 +937,9 @@ async function aiParse() {
   const chooser = wrap.querySelector('.parse-chooser');
   chooser.classList.add('hidden');
   loading.classList.remove('hidden');
-
   try {
     const resp = await fetch('/api/ai-parse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ csv: pendingCSVText }),
     });
     if (!resp.ok) {
@@ -1447,10 +959,9 @@ async function aiParse() {
 }
 
 // ─────────────────────────────────────────────
-// SCHEDULED NOTIFICATIONS SECTION
+// SCHEDULED NOTIFICATIONS (QUEUE VIEW)
 // ─────────────────────────────────────────────
 
-// Group notifications by date (gregFull)
 function groupByDay(queue) {
   const map = new Map();
   for (const n of queue) {
@@ -1459,25 +970,6 @@ function groupByDay(queue) {
     map.get(key).push(n);
   }
   return map;
-}
-
-function fmtUTCForDisplay(isoStr) {
-  if (!isoStr) return '\u2014';
-  const d = new Date(isoStr);
-  return d.toLocaleString('en-GB', {
-    timeZone: 'Europe/London',
-    weekday: 'short', day: 'numeric', month: 'short',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }) + ' (UK)';
-}
-
-function fmtUTCShort(isoStr) {
-  if (!isoStr) return '\u2014';
-  const d = new Date(isoStr);
-  return d.toLocaleTimeString('en-GB', {
-    timeZone: 'Europe/London',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  });
 }
 
 function renderScheduled(queue) {
@@ -1492,14 +984,13 @@ function renderScheduled(queue) {
   }
 
   const upcomingCount = queue.filter(n => (n.fireUTC || '') > nowISO).length;
-  const pastCount     = queue.length - upcomingCount;
+  const pastCount = queue.length - upcomingCount;
   countEl.textContent = `${queue.length} total \u00b7 ${upcomingCount} scheduled \u00b7 ${pastCount} fired`;
 
   const grouped = groupByDay(queue);
   list.innerHTML = '';
 
   for (const [dayLabel, notifs] of grouped) {
-    // Determine past/future: use first notification's fireUTC
     const firstUTC = notifs[0]?.fireUTC || '';
     const isPast = firstUTC && firstUTC <= nowISO;
     const stateClass = isPast ? 'past' : 'upcoming';
@@ -1538,10 +1029,7 @@ function renderScheduled(queue) {
       body.appendChild(row);
     }
 
-    header.addEventListener('click', () => {
-      dayDiv.classList.toggle('open');
-    });
-
+    header.addEventListener('click', () => dayDiv.classList.toggle('open'));
     dayDiv.appendChild(header);
     dayDiv.appendChild(body);
     list.appendChild(dayDiv);
@@ -1564,7 +1052,6 @@ async function fetchAndRenderQueue() {
 // EVENT WIRING
 // ─────────────────────────────────────────────
 
-// File input (click-to-browse)
 const fileInput = document.getElementById('csv-file');
 const dropZone = document.getElementById('drop-zone');
 
@@ -1577,13 +1064,10 @@ fileInput.addEventListener('change', e => {
   reader.readAsText(file);
 });
 
-// Drag & drop — handle on the zone div (input has pointer-events:none)
 dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over'); });
 dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  e.stopPropagation();
-  dropZone.classList.remove('drag-over');
+  e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (!file) return;
   const reader = new FileReader();
@@ -1605,7 +1089,6 @@ function resetDropZone() {
   dropZone.querySelector('p').textContent = 'or click to browse';
 }
 
-// Paste toggle
 document.getElementById('paste-toggle').addEventListener('click', () => {
   document.getElementById('paste-area').classList.toggle('hidden');
 });
@@ -1619,23 +1102,36 @@ document.getElementById('parse-paste-btn').addEventListener('click', () => {
 
 // Clear
 document.getElementById('clear-btn').addEventListener('click', () => {
-  parsedData = null;
-  pendingCSVText = null;
+  parsedData = null; pendingCSVText = null;
   document.getElementById('data-area').classList.add('hidden');
   document.getElementById('parse-chooser-wrap').classList.add('hidden');
   document.getElementById('csv-file').value = '';
   document.getElementById('csv-paste').value = '';
   resetDropZone();
+  showView('main');
 });
 
-// Preview notifications
+// Preview — switch to preview view
 document.getElementById('preview-btn').addEventListener('click', () => {
   if (!parsedData) return;
-  renderDayFilterTabs(parsedData);
-  renderNotificationPreview(parsedData, 'all');
-  document.getElementById('preview-panel-wrap').classList.remove('hidden');
-  document.getElementById('preview-panel-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  previewFilter = 'all';
+  previewPage = 0;
+  renderDayFilterTabs();
+  renderPreviewPage();
+  showView('preview');
 });
+
+// Preview pagination
+document.getElementById('preview-prev').addEventListener('click', () => { previewPage--; renderPreviewPage(); window.scrollTo(0, 0); });
+document.getElementById('preview-next').addEventListener('click', () => { previewPage++; renderPreviewPage(); window.scrollTo(0, 0); });
+document.getElementById('preview-back').addEventListener('click', () => showView('main'));
+
+// Queue view
+document.getElementById('queue-btn').addEventListener('click', () => {
+  fetchAndRenderQueue();
+  showView('queue');
+});
+document.getElementById('queue-back').addEventListener('click', () => showView('main'));
 
 // Raw JSON
 document.getElementById('raw-btn').addEventListener('click', () => {
@@ -1650,60 +1146,45 @@ document.getElementById('raw-btn').addEventListener('click', () => {
   }
 });
 
-// PUSH TO NTFY
+// PUSH TO NTFY — then switch to queue view
 document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
   if (!parsedData) { showAlert('No CSV loaded.', 'error'); return; }
-
   const btn = document.getElementById('push-ntfy-btn');
-  btn.disabled = true;
-  btn.textContent = 'Pushing\u2026';
+  btn.disabled = true; btn.textContent = 'Pushing\u2026';
 
   try {
     const notifications = buildAllNotifications(parsedData);
-
-    // Filter out notifications with no fireUTC (missing time data)
     const valid = notifications.filter(n => n.fireUTC);
-    if (valid.length === 0) {
-      showAlert('No valid fire times found.', 'error');
-      return;
-    }
+    if (valid.length === 0) { showAlert('No valid fire times found.', 'error'); return; }
 
     const resp = await fetch('/api/push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(valid),
     });
-
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const result = await resp.json();
 
     const parts = [`Pushed ${result.pushed} to NTFY`];
     if (result.deferred) parts.push(`${result.deferred} deferred`);
-    if (result.skipped)  parts.push(`${result.skipped} past`);
-    if (result.failed)   parts.push(`${result.failed} failed`);
+    if (result.skipped) parts.push(`${result.skipped} past`);
+    if (result.failed) parts.push(`${result.failed} failed`);
     parts.push(`Queue: ${result.queued} total`);
     showAlert(parts.join(' \u00b7 '), result.failed > 0 ? 'info' : 'success');
 
-    // Refresh the scheduled section
     await fetchAndRenderQueue();
-
-    // Scroll to scheduled section
-    document.getElementById('section-scheduled').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+    showView('queue');
   } catch (e) {
     showAlert(`Push failed: ${e.message}`, 'error');
     console.error(e);
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Push to NTFY';
+    btn.disabled = false; btn.textContent = 'Push to NTFY';
   }
 });
 
-// Delete all future notifications
+// Delete future
 document.getElementById('delete-future-btn').addEventListener('click', async () => {
   const btn = document.getElementById('delete-future-btn');
-  btn.disabled = true;
-  btn.textContent = 'Deleting\u2026';
+  btn.disabled = true; btn.textContent = 'Deleting\u2026';
   try {
     const resp = await fetch('/api/queue/future', { method: 'DELETE' });
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
@@ -1713,8 +1194,7 @@ document.getElementById('delete-future-btn').addEventListener('click', async () 
   } catch (e) {
     showAlert(`Delete failed: ${e.message}`, 'error');
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Delete future';
+    btn.disabled = false; btn.textContent = 'Delete future';
   }
 });
 
