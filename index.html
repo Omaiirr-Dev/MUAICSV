@@ -6,25 +6,23 @@
   <title>MUAI Prayer Times</title>
   <style>
     :root {
-      --bg: #0d0d0d;
-      --surface: #161616;
-      --surface2: #1e1e1e;
-      --border: #2a2a2a;
-      --accent: #c9a84c;
-      --accent-dim: #7a6330;
-      --text: #e8e8e8;
-      --text-muted: #888;
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #161616;
+      --border: #222;
+      --accent: #a08a3c;
+      --accent-dim: #5a4e28;
+      --text: #ccc;
+      --text-muted: #666;
       --fajr: #5b8fa8;
-      --sunrise: #d4832a;
-      --zuhr: #6bb86b;
-      --asr: #c4934a;
-      --maghrib: #9b6fb5;
-      --isha: #4a7dc4;
-      --fri: #2a3d1a;
-      --fri-border: #5a8f2a;
-      --sat: #1a2a3d;
-      --sat-border: #2a5a8f;
-      --sun: #1a2a3d;
+      --sunrise: #c07828;
+      --zuhr: #5a9a5a;
+      --asr: #b08040;
+      --maghrib: #8860a0;
+      --isha: #4070b0;
+      --green: #2a7a2a;
+      --red: #7a2020;
+      --orange: #906010;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,58 +30,62 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
       min-height: 100vh;
     }
 
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     header .logo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: 0.05em;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 0.02em;
     }
+
+    header .logo span { color: var(--accent); }
 
     header .subtitle {
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.7rem;
     }
 
     .main {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 20px;
     }
 
-    /* Upload zone */
+    /* ── Upload zone ── */
     .upload-zone {
-      border: 2px dashed #5a2020;
-      border-radius: 10px;
-      padding: 40px;
+      border: 1px dashed #3a1818;
+      border-radius: 6px;
+      padding: 24px;
       text-align: center;
-      background: #1a0e0e;
+      background: #120c0c;
       cursor: pointer;
-      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+      transition: border-color 0.2s, background 0.2s;
       position: relative;
     }
 
     .upload-zone:hover, .upload-zone.drag-over {
       border-color: var(--accent);
-      background: #1a1600;
+      background: #14120a;
     }
 
     .upload-zone.accepted {
-      border-color: #2a7a2a;
+      border-color: var(--green);
       border-style: solid;
-      background: #0d1f0d;
+      background: #0c140c;
     }
 
     .upload-zone input[type="file"] {
@@ -96,134 +98,136 @@
       pointer-events: none;
     }
 
-    .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .upload-icon { font-size: 1.2rem; margin-bottom: 6px; color: var(--text-muted); }
 
     .upload-zone h2 {
-      font-size: 1.1rem;
+      font-size: 0.82rem;
+      font-weight: 500;
       color: var(--text);
-      margin-bottom: 6px;
+      margin-bottom: 2px;
     }
 
     .upload-zone p {
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.72rem;
     }
 
+    /* ── Buttons ── */
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: 6px;
-      border: none;
-      font-size: 0.9rem;
-      font-weight: 600;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
+      transition: opacity 0.12s;
+      background: var(--surface2);
+      color: var(--text);
     }
 
-    .btn:hover { opacity: 0.85; }
-    .btn:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn:hover { opacity: 0.8; }
+    .btn:active { opacity: 0.7; }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
     .btn-primary {
-      background: var(--accent);
-      color: #111;
+      background: var(--accent-dim);
+      color: #ddd;
+      border-color: var(--accent-dim);
     }
 
     .btn-secondary {
       background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-color: var(--border);
     }
 
     .btn-danger {
-      background: #8a1818;
-      color: #f8c0c0;
-      border: 1px solid #c03030;
+      background: #1a0e0e;
+      color: #c06060;
+      border-color: #3a1818;
     }
 
     .btn-success {
-      background: #1a6b1a;
-      color: #c0f0c0;
-      border: 1px solid #30b030;
+      background: #0e1a0e;
+      color: #60c060;
+      border-color: #183a18;
     }
 
     .btn-ntfy {
-      background: #8a1818;
-      color: #fff;
-      border: 1px solid #c03030;
-      font-size: 0.88rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+      background: var(--red);
+      color: #e0c0c0;
+      border-color: #4a1a1a;
+      font-weight: 600;
+      letter-spacing: 0.03em;
     }
 
-    /* Month info bar */
+    /* ── Month info bar ── */
     .month-bar {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 20px;
-      margin-bottom: 20px;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       flex-wrap: wrap;
+      font-size: 0.78rem;
     }
 
     .month-bar .month-title {
-      font-size: 1.1rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--accent);
     }
 
     .month-bar .stats {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       color: var(--text-muted);
-      font-size: 0.82rem;
     }
 
-    .month-bar .stats span strong {
-      color: var(--text);
-    }
+    .month-bar .stats span strong { color: var(--text); }
 
-    /* Actions bar */
+    /* ── Actions bar ── */
     .actions-bar {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
       align-items: center;
     }
 
-    /* Prayer times table */
+    /* ── Prayer times table ── */
     .table-wrap {
       overflow-x: auto;
-      border-radius: 8px;
+      border-radius: 4px;
       border: 1px solid var(--border);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.83rem;
-      min-width: 900px;
+      font-size: 0.74rem;
+      min-width: 800px;
     }
 
     thead th {
       background: var(--surface);
-      padding: 10px 8px;
+      padding: 6px 5px;
       text-align: center;
       font-weight: 600;
-      border-bottom: 2px solid var(--border);
+      border-bottom: 1px solid var(--border);
       white-space: nowrap;
+      font-size: 0.7rem;
     }
 
     thead .th-group {
-      font-size: 0.7rem;
+      font-size: 0.62rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       color: var(--text-muted);
     }
 
@@ -235,94 +239,90 @@
     thead .th-isha { color: var(--isha); }
 
     tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background 0.1s;
+      border-bottom: 1px solid #1a1a1a;
     }
 
-    tbody tr:hover { background: #1a1a1a; }
+    tbody tr:hover { background: #141414; }
 
     tbody tr.row-fri {
-      background: var(--fri);
-      border-left: 3px solid var(--fri-border);
+      background: #111a0e;
+      border-left: 2px solid #3a6a20;
     }
 
-    tbody tr.row-fri:hover { background: #304020; }
-
-    tbody tr.row-sat { background: #1a1a2a; }
-    tbody tr.row-sun { background: #1a1a2a; }
+    tbody tr.row-fri:hover { background: #162010; }
+    tbody tr.row-sat { background: #0e1018; }
+    tbody tr.row-sun { background: #0e1018; }
 
     tbody td {
-      padding: 9px 8px;
+      padding: 5px 5px;
       text-align: center;
       white-space: nowrap;
     }
 
-    .col-day { font-weight: 700; }
-    .col-day.fri { color: var(--fri-border); }
-    .col-day.sat { color: #6a9fd4; }
-    .col-day.sun { color: #6a9fd4; }
+    .col-day { font-weight: 600; font-size: 0.72rem; }
+    .col-day.fri { color: #5a8f2a; }
+    .col-day.sat, .col-day.sun { color: #5080b0; }
 
     .col-date-hijri {
       color: var(--accent);
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 0.72rem;
     }
 
     .col-date-greg {
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.7rem;
     }
 
     .time-cell {
-      font-family: 'Courier New', monospace;
-      font-size: 0.88rem;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 0.74rem;
     }
 
     .jamat-cell {
-      font-family: 'Courier New', monospace;
-      font-size: 0.88rem;
-      font-weight: 700;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 0.74rem;
+      font-weight: 600;
     }
 
     .fajr-time { color: var(--fajr); }
-    .fajr-jamat { color: #a0d0e8; }
+    .fajr-jamat { color: #80b8d0; }
     .sunrise-time { color: var(--sunrise); }
     .zuhr-time { color: var(--zuhr); }
-    .zuhr-jamat { color: #a0e8a0; }
+    .zuhr-jamat { color: #80c080; }
     .asr-time { color: var(--asr); }
-    .asr-jamat { color: #e8c080; }
+    .asr-jamat { color: #c0a060; }
     .maghrib-time { color: var(--maghrib); }
-    .maghrib-jamat { color: #c8a0d8; }
+    .maghrib-jamat { color: #a080b8; }
     .isha-time { color: var(--isha); }
-    .isha-jamat { color: #80b0e8; }
+    .isha-jamat { color: #6090c0; }
 
-    .cell-empty { color: #333; }
+    .cell-empty { color: #282828; }
 
-    /* Notification preview panel */
+    /* ── Notification preview ── */
     .preview-panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 24px;
+      border-radius: 4px;
+      padding: 14px;
+      margin-top: 12px;
     }
 
     .preview-panel h3 {
       color: var(--accent);
-      margin-bottom: 16px;
-      font-size: 1rem;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
     }
 
-    .notif-day {
-      margin-bottom: 20px;
-    }
+    .notif-day { margin-bottom: 14px; }
 
     .notif-day-header {
-      font-size: 0.8rem;
-      font-weight: 700;
+      font-size: 0.7rem;
+      font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 8px;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
       padding-bottom: 4px;
       border-bottom: 1px solid var(--border);
     }
@@ -330,132 +330,125 @@
     .notif-card {
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin-bottom: 6px;
+      border-radius: 3px;
+      padding: 7px 10px;
+      margin-bottom: 4px;
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .notif-icon { font-size: 1.1rem; flex-shrink: 0; }
-
+    .notif-icon { font-size: 0.82rem; flex-shrink: 0; }
     .notif-body { flex: 1; }
 
     .notif-title {
-      font-size: 0.88rem;
-      font-weight: 600;
+      font-size: 0.76rem;
+      font-weight: 500;
       color: var(--text);
-      margin-bottom: 2px;
     }
 
     .notif-sub {
-      font-size: 0.78rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
     }
 
     .notif-countdown {
-      font-size: 0.82rem;
+      font-size: 0.7rem;
       color: var(--accent);
-      margin-top: 4px;
-      font-weight: 600;
+      margin-top: 2px;
     }
 
     .notif-firetime {
-      font-size: 0.7rem;
-      color: #555;
-      margin-bottom: 3px;
+      font-size: 0.62rem;
+      color: #444;
+      margin-bottom: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
     }
 
-    /* Day filter tabs */
+    /* ── Day filter tabs ── */
     .day-filter {
       display: flex;
-      gap: 6px;
-      margin-bottom: 16px;
+      gap: 4px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
     }
 
     .day-tab {
-      padding: 5px 12px;
-      border-radius: 20px;
+      padding: 3px 10px;
+      border-radius: 3px;
       border: 1px solid var(--border);
-      background: var(--surface2);
+      background: transparent;
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.7rem;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.12s;
     }
 
     .day-tab:hover, .day-tab.active {
-      background: var(--accent);
-      color: #111;
-      border-color: var(--accent);
-      font-weight: 700;
+      background: var(--accent-dim);
+      color: var(--text);
+      border-color: var(--accent-dim);
     }
 
-    /* Error/status messages */
+    /* ── Alerts ── */
     .alert {
-      padding: 12px 16px;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      font-size: 0.88rem;
+      padding: 8px 12px;
+      border-radius: 3px;
+      margin-bottom: 12px;
+      font-size: 0.76rem;
     }
 
     .alert-error {
-      background: #2a1010;
-      border: 1px solid #7a2020;
-      color: #f0a0a0;
+      background: #180c0c;
+      border: 1px solid #3a1818;
+      color: #c08080;
     }
 
     .alert-success {
-      background: #102a10;
-      border: 1px solid #207a20;
-      color: #a0f0a0;
+      background: #0c180c;
+      border: 1px solid #183a18;
+      color: #80c080;
     }
 
     .alert-info {
-      background: #10182a;
-      border: 1px solid #204a7a;
-      color: #a0c8f0;
+      background: #0c0e18;
+      border: 1px solid #18283a;
+      color: #80a0c0;
     }
 
-    /* Hidden */
     .hidden { display: none !important; }
 
-    /* Section */
-    .section {
-      margin-bottom: 28px;
-    }
+    /* ── Sections ── */
+    .section { margin-bottom: 20px; }
 
     .section-title {
-      font-size: 0.75rem;
-      font-weight: 700;
+      font-size: 0.65rem;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+    ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
 
     .badge {
       display: inline-block;
-      padding: 2px 7px;
-      border-radius: 10px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      background: var(--accent-dim);
-      color: var(--accent);
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.62rem;
+      font-weight: 600;
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
     }
 
     .raw-toggle {
-      font-size: 0.75rem;
+      font-size: 0.68rem;
       color: var(--text-muted);
       cursor: pointer;
       text-decoration: underline;
@@ -463,250 +456,248 @@
     }
 
     .raw-panel {
-      background: #0a0a0a;
+      background: #080808;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 12px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
-      color: #888;
+      border-radius: 3px;
+      padding: 10px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 0.68rem;
+      color: #555;
       white-space: pre-wrap;
       word-break: break-all;
-      max-height: 200px;
+      max-height: 180px;
       overflow-y: auto;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
-    /* ── Scheduled Notifications Section ── */
+    /* ── Scheduled Notifications ── */
     .sched-header {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
     .sched-header .sched-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
     }
 
     .sched-header .sched-count {
-      font-size: 0.82rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
     }
 
     .sched-actions {
       margin-left: auto;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
     }
 
     .sched-empty {
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.88rem;
-      padding: 32px;
+      font-size: 0.76rem;
+      padding: 24px;
       border: 1px dashed var(--border);
-      border-radius: 8px;
+      border-radius: 4px;
     }
 
-    /* Day row in scheduled list */
     .sched-day {
       border: 1px solid var(--border);
-      border-radius: 7px;
-      margin-bottom: 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
       overflow: hidden;
     }
 
     .sched-day-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
+      gap: 10px;
+      padding: 7px 12px;
       cursor: pointer;
       user-select: none;
-      transition: background 0.12s;
+      transition: background 0.1s;
+      font-size: 0.76rem;
     }
 
-    .sched-day-header:hover {
-      background: #1c1c1c;
-    }
+    .sched-day-header:hover { background: #141414; }
 
-    /* green = past/fired */
     .sched-day.past .sched-day-header {
-      background: #0d1f0d;
-      border-left: 3px solid #2a7a2a;
+      background: #0c140c;
+      border-left: 2px solid var(--green);
     }
 
-    .sched-day.past .sched-day-header:hover {
-      background: #112611;
-    }
+    .sched-day.past .sched-day-header:hover { background: #0e180e; }
 
-    /* orange = upcoming, pushed and scheduled in NTFY */
     .sched-day.upcoming .sched-day-header {
-      background: #1f1600;
-      border-left: 3px solid #a06000;
+      background: #14100a;
+      border-left: 2px solid var(--orange);
     }
 
-    .sched-day.upcoming .sched-day-header:hover {
-      background: #261c00;
-    }
+    .sched-day.upcoming .sched-day-header:hover { background: #18140c; }
 
     .sched-day-label {
-      font-size: 0.9rem;
-      font-weight: 700;
+      font-size: 0.78rem;
+      font-weight: 600;
       color: var(--text);
       flex: 1;
     }
 
-    .sched-day.past .sched-day-label     { color: #70d870; }
-    .sched-day.upcoming .sched-day-label { color: #e0a030; }
+    .sched-day.past .sched-day-label { color: #60b060; }
+    .sched-day.upcoming .sched-day-label { color: #c09030; }
 
     .sched-day-meta {
-      font-size: 0.75rem;
+      font-size: 0.66rem;
       color: var(--text-muted);
     }
 
     .sched-day-chevron {
-      font-size: 0.75rem;
+      font-size: 0.6rem;
       color: var(--text-muted);
-      transition: transform 0.18s;
+      transition: transform 0.15s;
     }
 
-    .sched-day.open .sched-day-chevron {
-      transform: rotate(90deg);
-    }
+    .sched-day.open .sched-day-chevron { transform: rotate(90deg); }
 
     .sched-day-body {
       display: none;
-      padding: 10px 16px 14px;
-      background: #101010;
+      padding: 8px 12px 10px;
+      background: #0c0c0c;
       border-top: 1px solid var(--border);
     }
 
-    .sched-day.open .sched-day-body {
-      display: block;
-    }
+    .sched-day.open .sched-day-body { display: block; }
 
     .sched-notif-row {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 7px 0;
-      border-bottom: 1px solid #1a1a1a;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid #161616;
+      font-size: 0.74rem;
     }
 
-    .sched-notif-row:last-child {
-      border-bottom: none;
-    }
+    .sched-notif-row:last-child { border-bottom: none; }
 
     .sched-notif-icon {
-      font-size: 1rem;
+      font-size: 0.78rem;
       flex-shrink: 0;
-      width: 24px;
+      width: 20px;
       text-align: center;
     }
 
-    .sched-notif-info {
-      flex: 1;
-    }
+    .sched-notif-info { flex: 1; }
 
     .sched-notif-title {
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.74rem;
+      font-weight: 500;
       color: var(--text);
     }
 
     .sched-notif-detail {
-      font-size: 0.76rem;
+      font-size: 0.66rem;
       color: var(--text-muted);
       margin-top: 1px;
     }
 
     .sched-notif-time {
-      font-size: 0.75rem;
-      color: #555;
+      font-size: 0.66rem;
+      color: #444;
       text-align: right;
       white-space: nowrap;
     }
 
     .sched-notif-time .utc {
       display: block;
-      font-size: 0.68rem;
-      color: #444;
+      font-size: 0.6rem;
+      color: #333;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       flex-shrink: 0;
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
-    .status-dot.past     { background: #30a830; }
-    .status-dot.upcoming { background: #c07820; }
+    .status-dot.past { background: var(--green); }
+    .status-dot.upcoming { background: var(--orange); }
 
     .push-bar {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
+      border-radius: 4px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
     .push-bar .push-info {
       flex: 1;
-      font-size: 0.85rem;
+      font-size: 0.74rem;
       color: var(--text-muted);
     }
 
-    .push-bar .push-info strong {
-      color: var(--text);
-    }
+    .push-bar .push-info strong { color: var(--text); }
 
-    /* ── Parse Mode Chooser ─────────────────────────────────── */
+    /* ── Parse Mode Chooser ── */
     .parse-chooser {
-      display: flex; gap: 10px; margin-top: 10px;
+      display: flex; gap: 8px; margin-top: 8px;
     }
     .parse-option {
-      flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px;
-      padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;
-      transition: all 0.15s;
+      flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 4px;
+      padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: all 0.12s;
     }
-    .parse-option:hover { border-color: #555; background: #1a1a1a; }
-    .parse-option-icon { font-size: 1rem; flex-shrink: 0; }
-    .parse-option-title { font-size: 0.85rem; font-weight: 600; color: var(--text); }
-    .parse-option-desc { font-size: 0.72rem; color: #555; margin-top: 1px; }
-    .parse-option.ai { border-color: #2a2418; }
-    .parse-option.ai:hover { border-color: var(--accent-dim); background: #151208; }
+    .parse-option:hover { border-color: #3a3a3a; background: #141414; }
+    .parse-option-icon { font-size: 0.78rem; flex-shrink: 0; color: var(--text-muted); }
+    .parse-option-title { font-size: 0.76rem; font-weight: 500; color: var(--text); }
+    .parse-option-desc { font-size: 0.64rem; color: #444; margin-top: 1px; }
+    .parse-option.ai { border-color: #1e1a12; }
+    .parse-option.ai:hover { border-color: var(--accent-dim); background: #12100a; }
     .parse-option.ai .parse-option-title { color: var(--accent); }
     .parse-loading {
-      text-align: center; padding: 20px; color: #888; font-size: 0.85rem;
+      text-align: center; padding: 16px; color: #555; font-size: 0.76rem;
     }
     .parse-loading .spinner {
-      display: inline-block; width: 16px; height: 16px; border: 2px solid #333;
+      display: inline-block; width: 12px; height: 12px; border: 1.5px solid #222;
       border-top-color: var(--accent); border-radius: 50%;
-      animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle;
+      animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Date range bar ── */
+    .date-range-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 14px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div>
-    <div class="logo">🕌 MUAI Prayer Times</div>
+    <div class="logo"><span>MUAI</span> Prayer Times</div>
     <div class="subtitle">Birmingham Islamic Prayer Notification System</div>
   </div>
-  <a href="/logout" style="margin-left:auto;font-size:0.78rem;color:#555;text-decoration:none;padding:6px 12px;border:1px solid #2a2a2a;border-radius:5px;" onmouseover="this.style.color='#e8e8e8'" onmouseout="this.style.color='#555'">Sign out</a>
+  <a href="/logout" style="margin-left:auto;font-size:0.68rem;color:#444;text-decoration:none;padding:4px 10px;border:1px solid #222;border-radius:3px;" onmouseover="this.style.color='#999'" onmouseout="this.style.color='#444'">Sign out</a>
 </header>
 
 <div class="main">
@@ -716,32 +707,32 @@
     <div class="section-title">Import CSV</div>
     <div class="upload-zone" id="drop-zone">
       <input type="file" id="csv-file" accept=".csv" />
-      <div class="upload-icon">📄</div>
+      <div class="upload-icon"></div>
       <h2>Drop your prayer times CSV here</h2>
-      <p>or click to browse &nbsp;·&nbsp; Accepts MUAI Birmingham format</p>
+      <p>or click to browse</p>
     </div>
-    <div style="margin-top:10px; text-align:right;">
-      <span class="raw-toggle" id="paste-toggle">or paste CSV text instead</span>
+    <div style="margin-top:6px; text-align:right;">
+      <span class="raw-toggle" id="paste-toggle">or paste CSV text</span>
     </div>
-    <div id="paste-area" class="hidden" style="margin-top:10px;">
-      <textarea id="csv-paste" rows="6" style="width:100%;background:#0a0a0a;color:#aaa;border:1px solid var(--border);border-radius:6px;padding:10px;font-family:monospace;font-size:0.78rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
-      <button class="btn btn-secondary" style="margin-top:8px;" id="parse-paste-btn">Parse Pasted CSV</button>
+    <div id="paste-area" class="hidden" style="margin-top:8px;">
+      <textarea id="csv-paste" rows="4" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste CSV content here..."></textarea>
+      <button class="btn btn-secondary" style="margin-top:6px;" id="parse-paste-btn">Parse pasted CSV</button>
     </div>
   </div>
 
   <!-- Parse Mode Chooser (shown after CSV loaded) -->
   <div id="parse-chooser-wrap" class="section hidden">
-    <div class="section-title">How should we read this CSV?</div>
+    <div class="section-title">Parse method</div>
     <div class="parse-chooser">
       <div class="parse-option" id="parse-script">
-        <div class="parse-option-icon">⚡</div>
+        <div class="parse-option-icon">&gt;_</div>
         <div>
           <div class="parse-option-title">Script Parse</div>
           <div class="parse-option-desc">Standard MUAI format</div>
         </div>
       </div>
       <div class="parse-option ai hidden" id="parse-ai">
-        <div class="parse-option-icon">🤖</div>
+        <div class="parse-option-icon">AI</div>
         <div>
           <div class="parse-option-title">AI Parse</div>
           <div class="parse-option-desc">Any CSV format</div>
@@ -763,22 +754,22 @@
     <div class="section">
       <div class="section-title">Parsed Month</div>
       <div class="month-bar">
-        <div class="month-title" id="month-title">—</div>
+        <div class="month-title" id="month-title">&mdash;</div>
         <div class="stats">
           <span><strong id="stat-days">0</strong> days</span>
-          <span><strong id="stat-fri">0</strong> Fridays</span>
+          <span><strong id="stat-fri">0</strong> Fri</span>
         </div>
-        <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">✕ Clear</button>
+        <button class="btn btn-secondary" id="clear-btn" style="margin-left:auto;">Clear</button>
       </div>
-      <div class="date-range-bar" id="date-range-bar" style="margin-top:10px;background:#111;border:1px solid #2a2a2a;border-radius:7px;padding:11px 18px;font-size:0.82rem;color:#aaa;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <span style="color:#555">Notifications scheduled:</span>
-        <span id="stat-start-eng" style="color:#e8e8e8;font-weight:600;">—</span>
-        <span style="color:#444">→</span>
-        <span id="stat-end-eng" style="color:#e8e8e8;font-weight:600;">—</span>
-        <span style="color:#555;margin-left:8px;">·</span>
-        <span id="stat-total-notifs" style="color:#c9a84c;font-weight:700;">0 notifications</span>
-        <span style="color:#555;">across</span>
-        <span id="stat-days2" style="color:#c9a84c;font-weight:700;">0 days</span>
+      <div class="date-range-bar" id="date-range-bar">
+        <span style="color:#444">Range:</span>
+        <span id="stat-start-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
+        <span style="color:#333">&rarr;</span>
+        <span id="stat-end-eng" style="color:var(--text);font-weight:500;">&mdash;</span>
+        <span style="color:#333;margin-left:6px;">&middot;</span>
+        <span id="stat-total-notifs" style="color:var(--accent);font-weight:600;">0 notifications</span>
+        <span style="color:#333">across</span>
+        <span id="stat-days2" style="color:var(--accent);font-weight:600;">0 days</span>
       </div>
     </div>
 
@@ -786,22 +777,22 @@
     <div class="section">
       <div class="section-title">Actions</div>
       <div class="actions-bar">
-        <button class="btn btn-primary" id="preview-btn">👁 Preview Notifications</button>
-        <button class="btn btn-ntfy" id="push-ntfy-btn">🔴 PUSH TO NTFY</button>
-        <button class="btn btn-secondary" id="raw-btn">Show Raw Parsed JSON</button>
+        <button class="btn btn-primary" id="preview-btn">Preview</button>
+        <button class="btn btn-ntfy" id="push-ntfy-btn">Push to NTFY</button>
+        <button class="btn btn-secondary" id="raw-btn">Raw JSON</button>
       </div>
     </div>
 
     <!-- Prayer times table -->
     <div class="section">
-      <div class="section-title">Prayer Times — Parsed Data</div>
+      <div class="section-title">Prayer Times</div>
       <div class="table-wrap">
         <table id="prayer-table">
           <thead>
             <tr>
-              <th rowspan="2" style="min-width:44px;">Day</th>
-              <th rowspan="2" style="min-width:40px;">Hijri</th>
-              <th rowspan="2" style="min-width:60px;">Date</th>
+              <th rowspan="2" style="min-width:36px;">Day</th>
+              <th rowspan="2" style="min-width:32px;">Hijri</th>
+              <th rowspan="2" style="min-width:44px;">Date</th>
               <th colspan="2" class="th-group th-fajr">Fajr</th>
               <th rowspan="2" class="th-group th-sunrise">Sunrise</th>
               <th colspan="2" class="th-group th-zuhr">Zuhr</th>
@@ -842,17 +833,17 @@
 
   </div>
 
-  <!-- ── Scheduled Notifications Section ── -->
+  <!-- Scheduled Notifications Section -->
   <div class="section" id="section-scheduled">
-    <div class="section-title">Scheduled Notifications Ready for NTFY</div>
+    <div class="section-title">Notification Queue</div>
 
     <div class="sched-header">
       <div>
-        <div class="sched-title">📅 Notification Queue</div>
-        <div class="sched-count" id="sched-count">Loading…</div>
+        <div class="sched-title">Scheduled</div>
+        <div class="sched-count" id="sched-count">Loading...</div>
       </div>
       <div class="sched-actions">
-        <button class="btn btn-danger" id="delete-future-btn">🗑 Delete All Future</button>
+        <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
       </div>
     </div>
 
@@ -1123,7 +1114,7 @@ function formatDiff(mins) {
 }
 
 function fmtTime(t) {
-  if (!t) return '—';
+  if (!t) return '\u2014';
   const p = timeTo24(t);
   if (!p) return t;
   const ampm = p.h < 12 ? 'AM' : 'PM';
@@ -1186,7 +1177,7 @@ function buildNotifications(day) {
 
   const prayers = [
     {
-      icon: '🕋',
+      icon: '\ud83d\udd4b',
       title: `Fajr has begun`,
       details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '',
       countdown: formatDiff(minutesBetween(fajrM, zuhrM)),
@@ -1196,8 +1187,8 @@ function buildNotifications(day) {
       fireUTC: getFireUTC(fajrM),
     },
     {
-      icon: '☀️',
-      title: `Zuhr has begun${day.day === 'Fri' ? ' · Jumu\'ah' : ''}`,
+      icon: '\u2600\ufe0f',
+      title: `Zuhr has begun${day.day === 'Fri' ? ' \u00b7 Jumu\'ah' : ''}`,
       details: '',
       countdown: formatDiff(minutesBetween(zuhrM, asrM)),
       nextName: 'Asr',
@@ -1206,7 +1197,7 @@ function buildNotifications(day) {
       fireUTC: getFireUTC(zuhrM),
     },
     {
-      icon: '⛅',
+      icon: '\u26c5',
       title: `Asr has begun`,
       details: '',
       countdown: formatDiff(minutesBetween(asrM, maghribM)),
@@ -1216,7 +1207,7 @@ function buildNotifications(day) {
       fireUTC: getFireUTC(asrM),
     },
     {
-      icon: '🌅',
+      icon: '\ud83c\udf05',
       title: `Maghrib has begun`,
       details: '',
       countdown: formatDiff(minutesBetween(maghribM, ishaM)),
@@ -1226,7 +1217,7 @@ function buildNotifications(day) {
       fireUTC: getFireUTC(maghribM),
     },
     {
-      icon: '🌙',
+      icon: '\ud83c\udf19',
       title: `Isha has begun`,
       details: '',
       countdown: null,
@@ -1242,7 +1233,7 @@ function buildNotifications(day) {
       icon: p.icon,
       title: p.title,
       details: p.details,
-      countdown: p.countdown ? `⏰ ${p.countdown} until ${p.nextName} · ${p.nextTime}` : null,
+      countdown: p.countdown ? `${p.countdown} until ${p.nextName} \u00b7 ${p.nextTime}` : null,
       fireTimeFmt: p.fireTimeFmt,
       fireUTC: p.fireUTC,
       priority: 'urgent',
@@ -1291,10 +1282,10 @@ function renderTable(data) {
     const dayClass = ['fri','sat','sun'].includes(isDay) ? isDay : '';
 
     function tc(val, cls) {
-      return `<td class="time-cell ${cls}">${val || '<span class="cell-empty">—</span>'}</td>`;
+      return `<td class="time-cell ${cls}">${val || '<span class="cell-empty">\u2014</span>'}</td>`;
     }
     function jc(val, cls) {
-      return `<td class="jamat-cell ${cls}">${val || '<span class="cell-empty">—</span>'}</td>`;
+      return `<td class="jamat-cell ${cls}">${val || '<span class="cell-empty">\u2014</span>'}</td>`;
     }
 
     tr.innerHTML = `
@@ -1349,7 +1340,7 @@ function renderNotificationPreview(data, filterDay = 'all') {
       card.innerHTML = `
         <div class="notif-icon">${n.icon}</div>
         <div class="notif-body">
-          <div class="notif-firetime">${engDate} · ${n.fireTimeFmt} · <span style="color:#6a4;">URGENT</span></div>
+          <div class="notif-firetime">${engDate} \u00b7 ${n.fireTimeFmt}</div>
           <div class="notif-title">${n.title}</div>
           ${n.details ? `<div class="notif-sub">${n.details}</div>` : ''}
           ${n.countdown ? `<div class="notif-countdown">${n.countdown}</div>` : ''}
@@ -1399,7 +1390,7 @@ function loadData(data) {
   document.getElementById('data-area').classList.remove('hidden');
   document.getElementById('preview-panel-wrap').classList.add('hidden');
   document.getElementById('raw-json-panel').classList.add('hidden');
-  showAlert(`✓ Parsed ${data.days.length} days from "${data.title}"`, 'success');
+  showAlert(`Parsed ${data.days.length} days from "${data.title}"`, 'success');
 }
 
 function handleCSVText(text) {
@@ -1445,7 +1436,7 @@ async function aiParse() {
     const data = await resp.json();
     wrap.classList.add('hidden');
     loadData(data);
-    showAlert(`✓ AI parsed ${data.days.length} days from "${data.title}"`, 'success');
+    showAlert(`AI parsed ${data.days.length} days from "${data.title}"`, 'success');
   } catch (err) {
     loading.classList.add('hidden');
     chooser.classList.remove('hidden');
@@ -1470,7 +1461,7 @@ function groupByDay(queue) {
 }
 
 function fmtUTCForDisplay(isoStr) {
-  if (!isoStr) return '—';
+  if (!isoStr) return '\u2014';
   const d = new Date(isoStr);
   return d.toLocaleString('en-GB', {
     timeZone: 'Europe/London',
@@ -1480,7 +1471,7 @@ function fmtUTCForDisplay(isoStr) {
 }
 
 function fmtUTCShort(isoStr) {
-  if (!isoStr) return '—';
+  if (!isoStr) return '\u2014';
   const d = new Date(isoStr);
   return d.toLocaleTimeString('en-GB', {
     timeZone: 'Europe/London',
@@ -1495,13 +1486,13 @@ function renderScheduled(queue) {
 
   if (!queue || queue.length === 0) {
     countEl.textContent = '0 notifications in queue';
-    list.innerHTML = `<div class="sched-empty">No notifications scheduled yet.<br><small style="color:#444;margin-top:6px;display:block;">Upload a CSV and press PUSH TO NTFY to schedule.</small></div>`;
+    list.innerHTML = `<div class="sched-empty">No notifications scheduled yet.<br><small style="color:#333;margin-top:4px;display:block;">Upload a CSV and push to NTFY to schedule.</small></div>`;
     return;
   }
 
   const upcomingCount = queue.filter(n => (n.fireUTC || '') > nowISO).length;
   const pastCount     = queue.length - upcomingCount;
-  countEl.textContent = `${queue.length} total · 🟠 ${upcomingCount} scheduled in NTFY · 🟢 ${pastCount} already fired`;
+  countEl.textContent = `${queue.length} total \u00b7 ${upcomingCount} scheduled \u00b7 ${pastCount} fired`;
 
   const grouped = groupByDay(queue);
   list.innerHTML = '';
@@ -1511,7 +1502,7 @@ function renderScheduled(queue) {
     const firstUTC = notifs[0]?.fireUTC || '';
     const isPast = firstUTC && firstUTC <= nowISO;
     const stateClass = isPast ? 'past' : 'upcoming';
-    const stateLabel = isPast ? '✓ Already fired' : '⏳ Scheduled — queued in NTFY';
+    const stateLabel = isPast ? 'Fired' : 'Scheduled';
 
     const dayDiv = document.createElement('div');
     dayDiv.className = `sched-day ${stateClass}`;
@@ -1521,8 +1512,8 @@ function renderScheduled(queue) {
     header.innerHTML = `
       <div class="status-dot ${stateClass}"></div>
       <div class="sched-day-label">${dayLabel}</div>
-      <div class="sched-day-meta">${notifs.length} notifications · ${stateLabel}</div>
-      <div class="sched-day-chevron">▶</div>
+      <div class="sched-day-meta">${notifs.length} notifications \u00b7 ${stateLabel}</div>
+      <div class="sched-day-chevron">\u25b6</div>
     `;
 
     const body = document.createElement('div');
@@ -1531,15 +1522,15 @@ function renderScheduled(queue) {
     for (const n of notifs) {
       const row = document.createElement('div');
       row.className = 'sched-notif-row';
-      const msgLines = [n.details, n.countdown].filter(Boolean).join(' · ');
+      const msgLines = [n.details, n.countdown].filter(Boolean).join(' \u00b7 ');
       row.innerHTML = `
-        <div class="sched-notif-icon">${n.icon || '🔔'}</div>
+        <div class="sched-notif-icon">${n.icon || ''}</div>
         <div class="sched-notif-info">
           <div class="sched-notif-title">${n.title}</div>
           ${msgLines ? `<div class="sched-notif-detail">${msgLines}</div>` : ''}
         </div>
         <div class="sched-notif-time">
-          ${n.fireTimeFmt || '—'}
+          ${n.fireTimeFmt || '\u2014'}
           <span class="utc">${n.fireUTC ? new Date(n.fireUTC).toISOString().slice(0,16).replace('T',' ') + ' UTC' : ''}</span>
         </div>
       `;
@@ -1601,16 +1592,16 @@ dropZone.addEventListener('drop', e => {
 
 function markAccepted(filename) {
   dropZone.classList.add('accepted');
-  dropZone.querySelector('.upload-icon').textContent = '✅';
+  dropZone.querySelector('.upload-icon').textContent = '';
   dropZone.querySelector('h2').textContent = filename;
-  dropZone.querySelector('p').textContent = 'File loaded — choose a parse method below';
+  dropZone.querySelector('p').textContent = 'File loaded \u2014 choose a parse method below';
 }
 
 function resetDropZone() {
   dropZone.classList.remove('accepted');
-  dropZone.querySelector('.upload-icon').textContent = '📄';
+  dropZone.querySelector('.upload-icon').textContent = '';
   dropZone.querySelector('h2').textContent = 'Drop your prayer times CSV here';
-  dropZone.querySelector('p').textContent = 'or click to browse \u00b7 Accepts MUAI Birmingham format';
+  dropZone.querySelector('p').textContent = 'or click to browse';
 }
 
 // Paste toggle
@@ -1660,11 +1651,11 @@ document.getElementById('raw-btn').addEventListener('click', () => {
 
 // PUSH TO NTFY
 document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
-  if (!parsedData) { showAlert('No CSV loaded — nothing to push.', 'error'); return; }
+  if (!parsedData) { showAlert('No CSV loaded.', 'error'); return; }
 
   const btn = document.getElementById('push-ntfy-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ Pushing…';
+  btn.textContent = 'Pushing\u2026';
 
   try {
     const notifications = buildAllNotifications(parsedData);
@@ -1672,7 +1663,7 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     // Filter out notifications with no fireUTC (missing time data)
     const valid = notifications.filter(n => n.fireUTC);
     if (valid.length === 0) {
-      showAlert('No valid fire times found — cannot push.', 'error');
+      showAlert('No valid fire times found.', 'error');
       return;
     }
 
@@ -1685,12 +1676,12 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const result = await resp.json();
 
-    const parts = [`✓ Pushed ${result.pushed} to NTFY now`];
-    if (result.deferred) parts.push(`${result.deferred} deferred (auto-drip)`);
+    const parts = [`Pushed ${result.pushed} to NTFY`];
+    if (result.deferred) parts.push(`${result.deferred} deferred`);
     if (result.skipped)  parts.push(`${result.skipped} past`);
     if (result.failed)   parts.push(`${result.failed} failed`);
     parts.push(`Queue: ${result.queued} total`);
-    showAlert(parts.join(' · '), result.failed > 0 ? 'info' : 'success');
+    showAlert(parts.join(' \u00b7 '), result.failed > 0 ? 'info' : 'success');
 
     // Refresh the scheduled section
     await fetchAndRenderQueue();
@@ -1703,7 +1694,7 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     console.error(e);
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔴 PUSH TO NTFY';
+    btn.textContent = 'Push to NTFY';
   }
 });
 
@@ -1711,18 +1702,18 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
 document.getElementById('delete-future-btn').addEventListener('click', async () => {
   const btn = document.getElementById('delete-future-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ Deleting…';
+  btn.textContent = 'Deleting\u2026';
   try {
     const resp = await fetch('/api/queue/future', { method: 'DELETE' });
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const result = await resp.json();
-    showAlert(`✓ Deleted ${result.deleted} future notifications. ${result.queue.length} past notifications remain.`, 'success');
+    showAlert(`Deleted ${result.deleted} future notifications. ${result.queue.length} past remain.`, 'success');
     await fetchAndRenderQueue();
   } catch (e) {
     showAlert(`Delete failed: ${e.message}`, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = '🗑 Delete All Future';
+    btn.textContent = 'Delete future';
   }
 });
 
