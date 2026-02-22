@@ -1395,9 +1395,10 @@ function loadData(data) {
 
 function handleCSVText(text) {
   pendingCSVText = text;
-  // Show parse mode chooser
+  // Show parse mode chooser — reset inner state in case of re-upload
   const wrap = document.getElementById('parse-chooser-wrap');
   wrap.classList.remove('hidden');
+  wrap.querySelector('.parse-chooser').classList.remove('hidden');
   document.getElementById('parse-loading').classList.add('hidden');
   wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
