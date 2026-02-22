@@ -111,7 +111,8 @@ async function pushToNtfy(notification) {
     tags:     ['bell'],
   };
   if (notification.fireUTC) {
-    payload.at = Math.floor(new Date(notification.fireUTC).getTime() / 1000);
+    // ntfy JSON API uses 'delay' (not 'at') — accepts Unix timestamp as string
+    payload.delay = String(Math.floor(new Date(notification.fireUTC).getTime() / 1000));
   }
 
   const body = JSON.stringify(payload);
