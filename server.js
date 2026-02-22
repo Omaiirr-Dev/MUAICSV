@@ -365,14 +365,16 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
             { role: 'user', content: body.csv },
           ],
           temperature: 0,
-          max_tokens: 16000,
+          max_completion_tokens: 16000,
         }),
       });
 
       if (!openaiResp.ok) {
-        const err = await openaiResp.text().catch(() => '');
-        console.error(`[AI] OpenAI ${openaiResp.status}: ${err}`);
-        json(res, 502, { error: 'OpenAI request failed' });
+        const errText = await openaiResp.text().catch(() => '');
+        console.error(`[AI] OpenAI ${openaiResp.status}: ${errText}`);
+        let detail = `OpenAI ${openaiResp.status}`;
+        try { detail = JSON.parse(errText).error?.message || detail; } catch {}
+        json(res, 502, { error: detail });
         return;
       }
 
