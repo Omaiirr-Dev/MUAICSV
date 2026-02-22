@@ -31,7 +31,7 @@ const PORT           = process.env.PORT || 3000;
 const PASSWORD       = process.env.PASSWORD || 'qaws';
 const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
                          .split(',').map(s => s.trim());
-const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'CSVMUAITEST';
+const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'muaitestnotif';
 const NTFY_SERVER    = process.env.NTFY_SERVER   || 'https://ntfy.sh';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
@@ -91,9 +91,10 @@ function saveQueue(queue) {
 // Server is the scheduler. ntfy is just the delivery pipe — fires immediately.
 const EMOJI_TO_TAG = {
   '🕋': 'kaaba',
+  '🌅': 'sunrise',
   '☀️': 'sunny',
   '⛅': 'partly_sunny',
-  '🌅': 'sunrise',
+  '🌇': 'city_sunset',
   '🌙': 'crescent_moon',
 };
 

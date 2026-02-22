@@ -710,15 +710,16 @@ function formatEngDate(day) {
 }
 
 function buildNotifications(day) {
-  const rawTimes = [timeTo24(day.fajrStart), timeTo24(day.zuhrStart), timeTo24(day.asrStart), timeTo24(day.maghribAdhan), timeTo24(day.ishaStart)];
-  const [fajrM, zuhrM, asrM, maghribM, ishaM] = resolveSequential(rawTimes);
+  const rawTimes = [timeTo24(day.fajrStart), timeTo24(day.sunrise), timeTo24(day.zuhrStart), timeTo24(day.asrStart), timeTo24(day.maghribAdhan), timeTo24(day.ishaStart)];
+  const [fajrM, sunriseM, zuhrM, asrM, maghribM, ishaM] = resolveSequential(rawTimes);
   function getFireUTC(m) { return m === null ? null : resolvedMinsToUTC(day.gregYear, day.gregMonth, day.gregDay, m); }
 
   const prayers = [
-    { icon: '\ud83d\udd4b', title: 'Fajr has begun', details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '', countdown: formatDiff(minutesBetween(fajrM, zuhrM)), nextName: 'Zuhr', nextTime: fmtTime(day.zuhrStart), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM) },
+    { icon: '\ud83d\udd4b', title: 'Fajr has begun', details: day.sunrise ? `Sunrise ${fmtTime(day.sunrise)}` : '', countdown: formatDiff(minutesBetween(fajrM, sunriseM)), nextName: 'Sunrise', nextTime: fmtTime(day.sunrise), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM) },
+    { icon: '\ud83c\udf05', title: 'Sunrise', details: '', countdown: formatDiff(minutesBetween(sunriseM, zuhrM)), nextName: 'Zuhr', nextTime: fmtTime(day.zuhrStart), fireTimeFmt: fmtTime(day.sunrise), fireUTC: getFireUTC(sunriseM) },
     { icon: '\u2600\ufe0f', title: `Zuhr has begun${day.day === 'Fri' ? ' \u00b7 Jumu\'ah' : ''}`, details: '', countdown: formatDiff(minutesBetween(zuhrM, asrM)), nextName: 'Asr', nextTime: fmtTime(day.asrStart), fireTimeFmt: fmtTime(day.zuhrStart), fireUTC: getFireUTC(zuhrM) },
     { icon: '\u26c5', title: 'Asr has begun', details: '', countdown: formatDiff(minutesBetween(asrM, maghribM)), nextName: 'Maghrib', nextTime: fmtTime(day.maghribAdhan), fireTimeFmt: fmtTime(day.asrStart), fireUTC: getFireUTC(asrM) },
-    { icon: '\ud83c\udf05', title: 'Maghrib has begun', details: '', countdown: formatDiff(minutesBetween(maghribM, ishaM)), nextName: 'Isha', nextTime: fmtTime(day.ishaStart), fireTimeFmt: fmtTime(day.maghribAdhan), fireUTC: getFireUTC(maghribM) },
+    { icon: '\ud83c\udf07', title: 'Maghrib has begun', details: '', countdown: formatDiff(minutesBetween(maghribM, ishaM)), nextName: 'Isha', nextTime: fmtTime(day.ishaStart), fireTimeFmt: fmtTime(day.maghribAdhan), fireUTC: getFireUTC(maghribM) },
     { icon: '\ud83c\udf19', title: 'Isha has begun', details: '', countdown: null, nextName: null, nextTime: null, fireTimeFmt: fmtTime(day.ishaStart), fireUTC: getFireUTC(ishaM) },
   ];
 
@@ -787,7 +788,7 @@ function renderMonthBar(data) {
   const last = data.days[data.days.length - 1];
   document.getElementById('stat-start-eng').textContent = first.gregFull || `${first.day} ${first.gregDate}`;
   document.getElementById('stat-end-eng').textContent = last.gregFull || `${last.day} ${last.gregDate}`;
-  document.getElementById('stat-total-notifs').textContent = `${data.days.length * 5} notifications`;
+  document.getElementById('stat-total-notifs').textContent = `${data.days.length * 6} notifications`;
   document.getElementById('stat-days2').textContent = `${data.days.length} days`;
 }
 
