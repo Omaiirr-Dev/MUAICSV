@@ -1563,10 +1563,11 @@ document.getElementById('push-ntfy-btn').addEventListener('click', async () => {
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);
     const result = await resp.json();
 
-    showAlert(
-      `✓ Pushed ${result.pushed} notifications to NTFY · ${result.failed} failed · Queue now has ${result.queued} total`,
-      result.failed > 0 ? 'info' : 'success'
-    );
+    const parts = [`✓ Pushed ${result.pushed} notifications to NTFY`];
+    if (result.skipped) parts.push(`${result.skipped} past (skipped)`);
+    if (result.failed)  parts.push(`${result.failed} failed`);
+    parts.push(`Queue: ${result.queued} total`);
+    showAlert(parts.join(' · '), result.failed > 0 ? 'info' : 'success');
 
     // Refresh the scheduled section
     await fetchAndRenderQueue();

@@ -344,16 +344,20 @@ const server = http.createServer(async (req, res) => {
     const merged = Array.from(map.values()).sort((a, b) => a.fireUTC.localeCompare(b.fireUTC));
     saveQueue(merged);
 
-    // 2. Push each notification to NTFY
+    // 2. Push only FUTURE notifications to NTFY (past ones stay in queue for display)
+    const nowISO = new Date().toISOString();
+    const future = incoming.filter(n => n.fireUTC && n.fireUTC > nowISO);
+    const skipped = incoming.length - future.length;
+
     let pushed = 0;
     let failed = 0;
-    for (const n of incoming) {
+    for (const n of future) {
       const ok = await pushToNtfy(n);
       if (ok) pushed++; else failed++;
     }
 
-    console.log(`[NTFY] Pushed ${pushed}, failed ${failed} to ${NTFY_SERVER}/${NTFY_CHANNEL}`);
-    json(res, 200, { pushed, failed, queued: merged.length });
+    console.log(`[NTFY] Pushed ${pushed}, failed ${failed}, skipped ${skipped} past — to ${NTFY_SERVER}`);
+    json(res, 200, { pushed, failed, skipped, queued: merged.length });
     return;
   }
 
