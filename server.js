@@ -98,17 +98,26 @@ function isWithinNtfyWindow(fireUTC) {
 // ─── NTFY PUSH ────────────────────────────────────────────────────────────────
 // Posts JSON to the ntfy ROOT endpoint (not the topic URL) — posting JSON to
 // the topic URL causes ntfy to treat the body as a file attachment.
-// Uses Unix timestamps for 'at' — ntfy rejects ISO 8601 in scheduled delivery.
+// Uses Unix timestamps for 'delay' — ntfy rejects ISO 8601 in scheduled delivery.
+const EMOJI_TO_TAG = {
+  '🕋': 'kaaba',
+  '☀️': 'sunny',
+  '⛅': 'partly_sunny',
+  '🌅': 'sunrise',
+  '🌙': 'crescent_moon',
+};
+
 async function pushToNtfy(notification) {
   const url = NTFY_SERVER;   // root endpoint — topic goes inside JSON body
   const message = [notification.details, notification.countdown].filter(Boolean).join('\n') || notification.title;
+  const tag = EMOJI_TO_TAG[notification.icon] || 'bell';
 
   const payload = {
     topic:    NTFY_CHANNEL,
     title:    notification.title,
     message,
     priority: 5,
-    tags:     ['bell'],
+    tags:     [tag],
   };
   if (notification.fireUTC) {
     // ntfy JSON API uses 'delay' (not 'at') — accepts Unix timestamp as string
