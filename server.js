@@ -531,3 +531,42 @@ async function schedulerTick() {
 // Run every 30 seconds
 setInterval(schedulerTick, TICK_INTERVAL_MS);
 console.log('[SCHEDULER] Running — checking every 30s for due notifications');
+
+// ─── ERROR/ALERT CHANNEL ─────────────────────────────────────────────────────
+const ALERT_CHANNEL = process.env.ALERT_CHANNEL || 'muaierror';
+
+async function sendAlert(title, message) {
+  const payload = {
+    topic: ALERT_CHANNEL,
+    title,
+    message,
+    priority: 5,
+    tags: ['warning'],
+  };
+  try {
+    if (typeof fetch !== 'undefined') {
+      await fetch(NTFY_SERVER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
+    console.log(`[ALERT] ${title}: ${message}`);
+  } catch (e) {
+    console.error('[ALERT] Failed to send:', e.message);
+  }
+}
+
+// Alert on boot (catches redeploys)
+sendAlert('Server restarted', `MUAI Prayer Times server just booted at ${new Date().toISOString()}. Queue may have been wiped — check scheduled notifications.`);
+
+// Every 12 hours, check if queue has future notifications
+const HEALTH_CHECK_MS = 12 * 60 * 60 * 1000;
+setInterval(() => {
+  const queue = loadQueue();
+  const nowISO = new Date().toISOString();
+  const future = queue.filter(n => n.fireUTC && n.fireUTC > nowISO && !n.firedToNtfy);
+  if (future.length === 0) {
+    sendAlert('No notifications scheduled', 'The queue is empty — no upcoming prayer notifications. Upload a schedule.');
+  }
+}, HEALTH_CHECK_MS);
