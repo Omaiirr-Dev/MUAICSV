@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a2744" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MUAI Prayer" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icon-192.svg" />
   <title>MUAI Prayer Times — Birmingham</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
@@ -396,6 +403,71 @@
 
     .no-data-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.4; }
 
+    /* ── Install banner ── */
+    .install-banner {
+      display: none;
+      max-width: 480px;
+      margin: 0 auto 12px;
+      padding: 0 16px;
+    }
+
+    .install-banner.show { display: block; }
+
+    .install-inner {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .install-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .install-icon svg { width: 22px; height: 22px; }
+
+    .install-text {
+      flex: 1;
+      color: white;
+      font-size: 0.78rem;
+      line-height: 1.4;
+    }
+
+    .install-text strong { font-weight: 600; }
+
+    .install-btn {
+      background: var(--gold);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .install-dismiss {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 2px;
+      flex-shrink: 0;
+    }
+
     /* ── Footer ── */
     .footer {
       text-align: center;
@@ -473,6 +545,20 @@
     <button id="cal-next" title="Next day">&#8250;</button>
   </div>
   <div class="calendar-day-list" id="cal-list"></div>
+</div>
+
+<div class="install-banner" id="install-banner">
+  <div class="install-inner">
+    <div class="install-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+    </div>
+    <div class="install-text">
+      <strong>Add to Home Screen</strong><br>
+      Quick access like an app
+    </div>
+    <button class="install-btn" id="install-btn">Install</button>
+    <button class="install-dismiss" id="install-dismiss">&times;</button>
+  </div>
 </div>
 
 <div class="footer">
@@ -689,6 +775,51 @@ document.getElementById('cal-next').addEventListener('click', () => {
 fetchTimes();
 setInterval(tickCountdown, 1000);
 setInterval(fetchTimes, 5 * 60 * 1000);
+
+// ── PWA: Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── PWA: Install prompt ──
+let deferredPrompt = null;
+const banner = document.getElementById('install-banner');
+const installBtn = document.getElementById('install-btn');
+const dismissBtn = document.getElementById('install-dismiss');
+
+// Show banner if not already installed and not dismissed this session
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!isStandalone && !sessionStorage.getItem('pwa-dismissed')) {
+    banner.classList.add('show');
+  }
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+  banner.classList.remove('show');
+});
+
+dismissBtn.addEventListener('click', () => {
+  banner.classList.remove('show');
+  sessionStorage.setItem('pwa-dismissed', '1');
+});
+
+// For iOS Safari (no beforeinstallprompt), show manual instructions
+if (/iPhone|iPad/.test(navigator.userAgent) && !isStandalone && !sessionStorage.getItem('pwa-dismissed')) {
+  banner.classList.add('show');
+  installBtn.textContent = 'How?';
+  installBtn.addEventListener('click', () => {
+    alert('Tap the Share button (box with arrow) at the bottom of Safari, then tap "Add to Home Screen"');
+  }, { once: true });
+}
 </script>
 </body>
 </html>

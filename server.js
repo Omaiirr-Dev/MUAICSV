@@ -257,6 +257,23 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // PWA static files (public, no auth)
+  const pwaFiles = {
+    '/manifest.json': { file: 'manifest.json', type: 'application/manifest+json' },
+    '/sw.js': { file: 'sw.js', type: 'application/javascript' },
+    '/icon-192.svg': { file: 'icon.svg', type: 'image/svg+xml' },
+    '/icon-512.svg': { file: 'icon.svg', type: 'image/svg+xml' },
+  };
+  if (pwaFiles[url]) {
+    const { file, type } = pwaFiles[url];
+    fs.readFile(path.join(__dirname, file), (err, data) => {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' });
+      res.end(data);
+    });
+    return;
+  }
+
   if (url === '/api/times' && req.method === 'GET') {
     const queue = loadQueue();
     const now = new Date();
