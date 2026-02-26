@@ -555,6 +555,7 @@ function renderPrayers(prayers, nextPrayer) {
 
   const sorted = prayers
     .map(p => ({ ...p, meta: lookupMeta(p.title) }))
+    .filter(p => p.meta.iconKey !== 'sunrise')
     .sort((a, b) => a.meta.order - b.meta.order);
 
   const nowISO = new Date().toISOString();
@@ -609,6 +610,7 @@ function renderCalendarDay() {
 
   const sorted = day.prayers
     .map(p => ({ ...p, meta: lookupMeta(p.title) }))
+    .filter(p => p.meta.iconKey !== 'sunrise')
     .sort((a, b) => a.meta.order - b.meta.order);
 
   let html = `<div class="cal-prayer-row" style="padding:8px 18px;border-bottom:1px solid #eee;">
@@ -638,12 +640,22 @@ async function fetchTimes() {
     document.getElementById('hero-date').textContent = data.todayLabel || '';
     renderPrayers(data.today, data.nextPrayer);
 
-    if (data.nextPrayer && data.nextPrayer.fireUTC) {
-      nextPrayerUTC = data.nextPrayer.fireUTC;
-      const meta = lookupMeta(data.nextPrayer.title);
+    // Find next non-sunrise prayer for countdown
+    let cdPrayer = data.nextPrayer;
+    if (cdPrayer && lookupMeta(cdPrayer.title).iconKey === 'sunrise' && data.today) {
+      const nowISO = new Date().toISOString();
+      const after = data.today
+        .filter(p => p.fireUTC && p.fireUTC > nowISO && lookupMeta(p.title).iconKey !== 'sunrise')
+        .sort((a, b) => a.fireUTC.localeCompare(b.fireUTC));
+      cdPrayer = after[0] || null;
+    }
+
+    if (cdPrayer && cdPrayer.fireUTC) {
+      nextPrayerUTC = cdPrayer.fireUTC;
+      const meta = lookupMeta(cdPrayer.title);
 
       document.getElementById('cd-prayer').textContent = meta.name;
-      document.getElementById('cd-at').textContent = data.nextPrayer.fireTimeFmt || '';
+      document.getElementById('cd-at').textContent = cdPrayer.fireTimeFmt || '';
       tickCountdown();
     } else {
       document.getElementById('cd-prayer').textContent = '\u2014';
