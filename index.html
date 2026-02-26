@@ -721,10 +721,9 @@ function buildNotifications(day) {
   }
 
   const zuhrLabel = day.day === 'Fri' ? 'Zuhr has begun \u00b7 Jumu\'ah' : 'Zuhr has begun';
-  const fajrLabel = day.sunrise ? `Fajr has begun (Sunrise at ${fmtTime(day.sunrise)})` : 'Fajr has begun';
 
   const notifs = [
-    { icon: '\ud83d\udd4b', title: fajrLabel, details: jamatDetail(fajrM, fajrJM, day.fajrJamat), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM) },
+    { icon: '\ud83d\udd4b', title: 'Fajr has begun', details: jamatDetail(fajrM, fajrJM, day.fajrJamat), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM) },
     { icon: '\ud83c\udf05', title: 'Sunrise', details: fmtTime(day.sunrise), fireTimeFmt: fmtTime(day.sunrise), fireUTC: getFireUTC(sunriseM) },
     { icon: '\u2600\ufe0f', title: zuhrLabel, details: jamatDetail(zuhrM, zuhrJM, day.zuhrJamat), fireTimeFmt: fmtTime(day.zuhrStart), fireUTC: getFireUTC(zuhrM) },
     { icon: '\u26c5', title: 'Asr has begun', details: jamatDetail(asrM, asrJM, day.asrJamat), fireTimeFmt: fmtTime(day.asrStart), fireUTC: getFireUTC(asrM) },

@@ -306,6 +306,24 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── API: GET /api/calendar — return all future queue days for calendar browsing ──
+  if (url === '/api/calendar' && req.method === 'GET') {
+    const queue = loadQueue();
+    const nowISO = new Date().toISOString();
+    // Group by gregFull, only include days with future or today's prayers
+    const dayMap = new Map();
+    for (const n of queue) {
+      const key = n.gregFull || 'Unknown';
+      if (!dayMap.has(key)) dayMap.set(key, []);
+      dayMap.get(key).push(n);
+    }
+    const days = Array.from(dayMap.entries())
+      .map(([label, prayers]) => ({ label, prayers }))
+      .filter(d => d.prayers.some(p => p.fireUTC && p.fireUTC >= nowISO.slice(0, 10)));
+    json(res, 200, { days });
+    return;
+  }
+
   // ── IP check (always first) ──────────────────────────────────────────────
   if (!isIPAllowed(ip)) {
     console.log(`[BLOCKED] ${ip} → ${req.url}`);
