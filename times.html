@@ -284,8 +284,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      border: 1px solid var(--navy-light);
       border-radius: 12px;
       padding: 10px 14px;
       box-shadow: var(--shadow);
@@ -293,8 +293,8 @@
     }
 
     .calendar-nav button {
-      background: none;
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: 8px;
       width: 36px;
       height: 36px;
@@ -302,31 +302,31 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: var(--text);
-      font-size: 1rem;
+      color: white;
+      font-size: 1.1rem;
       transition: all 0.12s;
     }
 
     .calendar-nav button:hover {
-      background: #f0f0f0;
-      border-color: #ddd;
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.25);
     }
 
     .calendar-nav button:disabled {
-      opacity: 0.25;
+      opacity: 0.2;
       cursor: not-allowed;
     }
 
     .calendar-nav-label {
       font-size: 0.82rem;
       font-weight: 600;
-      color: var(--text);
+      color: white;
       text-align: center;
     }
 
     .calendar-nav-sub {
       font-size: 0.65rem;
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.55);
       font-weight: 400;
     }
 
@@ -339,33 +339,51 @@
     }
 
     .cal-prayer-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 80px 90px;
       align-items: center;
-      padding: 10px 16px;
-      border-bottom: 1px solid #f3f3f3;
+      padding: 11px 18px;
+      border-bottom: 1px solid #f0f0f0;
       font-size: 0.82rem;
+      transition: background 0.12s;
     }
 
     .cal-prayer-row:last-child { border-bottom: none; }
 
+    .cal-prayer-row:hover { background: #fafbfd; }
+
+    .cal-prayer-icon {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    .cal-prayer-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
     .cal-prayer-name {
-      flex: 1;
       font-weight: 500;
       color: var(--text);
+      display: flex;
+      align-items: center;
     }
 
     .cal-prayer-time {
       font-weight: 600;
       color: var(--navy);
       font-variant-numeric: tabular-nums;
+      text-align: right;
     }
 
     .cal-prayer-jamat {
       font-size: 0.7rem;
       color: var(--text-muted);
-      margin-left: 10px;
-      min-width: 60px;
       text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
     /* ── No data state ── */
@@ -593,13 +611,18 @@ function renderCalendarDay() {
     .map(p => ({ ...p, meta: lookupMeta(p.title) }))
     .sort((a, b) => a.meta.order - b.meta.order);
 
-  let html = '';
+  let html = `<div class="cal-prayer-row" style="padding:8px 18px;border-bottom:1px solid #eee;">
+    <div class="cal-prayer-name" style="font-size:0.65rem;color:var(--text-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Prayer</div>
+    <div class="cal-prayer-time" style="font-size:0.65rem;color:var(--text-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Time</div>
+    <div class="cal-prayer-jamat" style="font-size:0.65rem;color:var(--text-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Jamat</div>
+  </div>`;
   for (const p of sorted) {
     const jamat = extractJamat(p.details);
+    const icon = PRAYER_ICONS[p.meta.iconKey] || PRAYER_ICONS.fajr;
     html += `<div class="cal-prayer-row">
-      <div class="cal-prayer-name">${p.meta.name}</div>
+      <div class="cal-prayer-name"><span class="cal-prayer-icon">${icon}</span>${p.meta.name}</div>
       <div class="cal-prayer-time">${p.fireTimeFmt || '\u2014'}</div>
-      ${jamat ? `<div class="cal-prayer-jamat">${jamat}</div>` : '<div class="cal-prayer-jamat"></div>'}
+      <div class="cal-prayer-jamat">${jamat || '\u00A0'}</div>
     </div>`;
   }
 
