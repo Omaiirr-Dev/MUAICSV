@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUAI Prayer Times — Birmingham</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
+
+    :root {
+      --gold: #b8962e;
+      --gold-light: #d4af37;
+      --gold-soft: #f5ecd7;
+      --bg: #fafafa;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --text-muted: #888;
+      --text-light: #bbb;
+      --border: #eee;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+      --shadow-lg: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Islamic arch header ── */
+    .hero {
+      background: linear-gradient(135deg, #1a3a2a 0%, #0f2a1c 50%, #1a3a2a 100%);
+      color: white;
+      text-align: center;
+      padding: 40px 20px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(184,150,46,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(184,150,46,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Islamic geometric pattern overlay */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0.04;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(255,255,255,0.5) 28px, rgba(255,255,255,0.5) 29px),
+        repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.5) 28px, rgba(255,255,255,0.5) 29px);
+      pointer-events: none;
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+
+    .mosque-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+    }
+
+    .hero h1 {
+      font-family: 'Amiri', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 2px;
+    }
+
+    .hero h1 span { color: var(--gold-light); }
+
+    .hero-subtitle {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-date {
+      margin-top: 16px;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 400;
+    }
+
+    /* ── Arch divider ── */
+    .arch-divider {
+      position: relative;
+      margin-top: -30px;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .arch-divider svg {
+      display: block;
+      width: 100%;
+      height: 30px;
+    }
+
+    /* ── Countdown banner ── */
+    .countdown-wrap {
+      max-width: 480px;
+      margin: -14px auto 0;
+      padding: 0 16px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .countdown {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .countdown-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .countdown-prayer {
+      font-family: 'Amiri', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .countdown-time {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-at {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    /* ── Prayer list ── */
+    .prayer-section {
+      max-width: 480px;
+      margin: 24px auto 0;
+      padding: 0 16px 40px;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    .prayer-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .prayer-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid #f3f3f3;
+      transition: background 0.15s;
+    }
+
+    .prayer-row:last-child { border-bottom: none; }
+
+    .prayer-row.active {
+      background: linear-gradient(135deg, #f8f5eb 0%, #fdfcf7 100%);
+      border-left: 3px solid var(--gold);
+      padding-left: 15px;
+    }
+
+    .prayer-row.past {
+      opacity: 0.45;
+    }
+
+    .prayer-icon {
+      font-size: 1.4rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: #f7f7f7;
+      flex-shrink: 0;
+    }
+
+    .prayer-row.active .prayer-icon {
+      background: var(--gold-soft);
+    }
+
+    .prayer-info {
+      flex: 1;
+      margin-left: 14px;
+    }
+
+    .prayer-name {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .prayer-jamat {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .prayer-time-col {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .prayer-adhan-time {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .prayer-jamat-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .prayer-row.active .prayer-adhan-time {
+      color: var(--gold);
+    }
+
+    /* ── No data state ── */
+    .no-data {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .no-data-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.4; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.65rem;
+      color: var(--text-light);
+      letter-spacing: 0.04em;
+    }
+
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    /* ── Bismi decoration ── */
+    .bismi {
+      font-family: 'Amiri', serif;
+      font-size: 1.3rem;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 12px;
+      direction: rtl;
+    }
+
+    /* ── Loading pulse ── */
+    .loading .prayer-row {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Decorative dots ── */
+    .dot-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 0;
+      margin: 0 18px;
+    }
+
+    .dot-divider span {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .dot-divider span:nth-child(2) {
+      width: 5px;
+      height: 5px;
+      background: var(--gold-soft);
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-content">
+    <div class="bismi">&#65010;</div>
+    <div class="mosque-icon">&#x1F54C;</div>
+    <h1><span>MUAI</span> Prayer Times</h1>
+    <div class="hero-subtitle">Birmingham, UK</div>
+    <div class="hero-date" id="hero-date">&mdash;</div>
+  </div>
+</div>
+
+<div class="arch-divider">
+  <svg viewBox="0 0 400 30" preserveAspectRatio="none">
+    <path d="M0,0 L0,30 L400,30 L400,0 C400,0 350,28 200,28 C50,28 0,0 0,0 Z" fill="#fafafa"/>
+  </svg>
+</div>
+
+<div class="countdown-wrap">
+  <div class="countdown" id="countdown-box">
+    <div class="countdown-label">Next prayer</div>
+    <div class="countdown-prayer" id="cd-prayer">&mdash;</div>
+    <div class="countdown-time" id="cd-time">&mdash;</div>
+    <div class="countdown-at" id="cd-at">&mdash;</div>
+  </div>
+</div>
+
+<div class="prayer-section">
+  <div class="section-label" id="prayers-label">Today's prayers</div>
+  <div class="prayer-card loading" id="prayer-list">
+    <!-- Skeleton rows -->
+    <div class="prayer-row"><div class="prayer-icon" style="background:#f0f0f0">&nbsp;</div><div class="prayer-info" style="margin-left:14px"><div style="background:#f0f0f0;height:12px;width:60px;border-radius:4px"></div></div></div>
+    <div class="prayer-row"><div class="prayer-icon" style="background:#f0f0f0">&nbsp;</div><div class="prayer-info" style="margin-left:14px"><div style="background:#f0f0f0;height:12px;width:60px;border-radius:4px"></div></div></div>
+    <div class="prayer-row"><div class="prayer-icon" style="background:#f0f0f0">&nbsp;</div><div class="prayer-info" style="margin-left:14px"><div style="background:#f0f0f0;height:12px;width:60px;border-radius:4px"></div></div></div>
+  </div>
+</div>
+
+<div class="footer">
+  MUAI &middot; Birmingham Islamic Prayer Notification System
+</div>
+
+<script>
+const PRAYER_META = {
+  'Fajr has begun':     { name: 'Fajr',    icon: '&#x1F54B;', order: 0 },
+  'Sunrise':            { name: 'Sunrise',  icon: '&#x1F305;', order: 1 },
+  'Zuhr has begun':     { name: 'Zuhr',     icon: '&#x2600;&#xFE0F;', order: 2 },
+  "Zuhr has begun \u00b7 Jumu'ah": { name: "Jumu'ah", icon: '&#x2600;&#xFE0F;', order: 2 },
+  'Asr has begun':      { name: 'Asr',      icon: '&#x26C5;',  order: 3 },
+  'Maghrib has begun':  { name: 'Maghrib',  icon: '&#x1F307;', order: 4 },
+  'Isha has begun':     { name: 'Isha',     icon: '&#x1F319;', order: 5 },
+};
+
+let nextPrayerUTC = null;
+let nextPrayerName = '';
+let nextPrayerTimeFmt = '';
+
+function fmtCountdown(ms) {
+  if (ms <= 0) return '0:00';
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function tickCountdown() {
+  if (!nextPrayerUTC) return;
+  const diff = new Date(nextPrayerUTC).getTime() - Date.now();
+  const el = document.getElementById('cd-time');
+  if (diff <= 0) {
+    el.textContent = 'Now';
+    // Refresh data after prayer time passes
+    setTimeout(fetchTimes, 60000);
+  } else {
+    el.textContent = fmtCountdown(diff);
+  }
+}
+
+function extractJamat(details) {
+  if (!details) return '';
+  // "15m until Jamat · 1:30 PM" → "Jamat 1:30 PM"
+  const match = details.match(/Jamat\s*[·\u00b7]\s*(.+)/);
+  if (match) return 'Jamat ' + match[1].trim();
+  const matchAt = details.match(/Jamat at (.+)/);
+  if (matchAt) return 'Jamat ' + matchAt[1].trim();
+  return '';
+}
+
+function renderPrayers(prayers, nextPrayer) {
+  const list = document.getElementById('prayer-list');
+  list.classList.remove('loading');
+
+  if (!prayers || prayers.length === 0) {
+    list.innerHTML = '<div class="no-data"><div class="no-data-icon">&#x1F54C;</div>No prayer times scheduled for today.<br>Check back soon.</div>';
+    return;
+  }
+
+  // Sort by order
+  const sorted = prayers
+    .map(p => {
+      const meta = PRAYER_META[p.title] || { name: p.title, icon: p.icon || '', order: 99 };
+      return { ...p, meta };
+    })
+    .sort((a, b) => a.meta.order - b.meta.order);
+
+  const nowISO = new Date().toISOString();
+  let foundNext = false;
+
+  // Find sunrise time so we can show it on the Fajr row
+  const sunriseEntry = sorted.find(p => p.meta.name === 'Sunrise');
+  const sunriseTimeFmt = sunriseEntry ? (sunriseEntry.fireTimeFmt || '') : '';
+
+  let html = '';
+  for (const p of sorted) {
+    const isPast = p.fireUTC && p.fireUTC <= nowISO;
+    const isNext = !foundNext && p.fireUTC && p.fireUTC > nowISO;
+    if (isNext) foundNext = true;
+
+    const stateClass = isNext ? 'active' : (isPast ? 'past' : '');
+    const jamat = extractJamat(p.details);
+
+    // Fajr: append "(Sunrise at HH:MM)" to the name
+    let displayName = p.meta.name;
+    if (p.meta.order === 0 && sunriseTimeFmt) {
+      displayName += ` <span style="font-weight:400;font-size:0.72rem;color:var(--text-muted)">(Sunrise at ${sunriseTimeFmt})</span>`;
+    }
+
+    // Sunrise: show actual time as subtitle
+    let subtitleHTML = '';
+    if (p.meta.name === 'Sunrise' && p.fireTimeFmt) {
+      subtitleHTML = `<div class="prayer-jamat">${p.fireTimeFmt}</div>`;
+    } else if (jamat) {
+      subtitleHTML = `<div class="prayer-jamat">${jamat}</div>`;
+    }
+
+    html += `<div class="prayer-row ${stateClass}">
+      <div class="prayer-icon">${p.meta.icon}</div>
+      <div class="prayer-info">
+        <div class="prayer-name">${displayName}</div>
+        ${subtitleHTML}
+      </div>
+      <div class="prayer-time-col">
+        <div class="prayer-adhan-time">${p.fireTimeFmt || '\u2014'}</div>
+        ${jamat ? `<div class="prayer-jamat-time">Jamat</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  list.innerHTML = html;
+}
+
+async function fetchTimes() {
+  try {
+    const resp = await fetch('/api/times');
+    if (!resp.ok) throw new Error('Failed');
+    const data = await resp.json();
+
+    // Set date
+    document.getElementById('hero-date').textContent = data.todayLabel || '';
+
+    // Render today's prayers
+    renderPrayers(data.today, data.nextPrayer);
+
+    // Set countdown target
+    if (data.nextPrayer && data.nextPrayer.fireUTC) {
+      nextPrayerUTC = data.nextPrayer.fireUTC;
+      const meta = PRAYER_META[data.nextPrayer.title];
+      nextPrayerName = meta ? meta.name : data.nextPrayer.title;
+      nextPrayerTimeFmt = data.nextPrayer.fireTimeFmt || '';
+
+      document.getElementById('cd-prayer').textContent = nextPrayerName;
+      document.getElementById('cd-at').textContent = nextPrayerTimeFmt ? 'at ' + nextPrayerTimeFmt : '';
+      tickCountdown();
+    } else {
+      document.getElementById('cd-prayer').textContent = '\u2014';
+      document.getElementById('cd-time').textContent = '\u2014';
+      document.getElementById('cd-at').textContent = 'No upcoming prayers';
+    }
+  } catch (e) {
+    console.error('Failed to load times:', e);
+    document.getElementById('prayer-list').innerHTML = '<div class="no-data"><div class="no-data-icon">&#x26A0;&#xFE0F;</div>Could not load prayer times.<br>Please try again later.</div>';
+  }
+}
+
+// Init
+fetchTimes();
+
+// Live countdown tick every second
+setInterval(tickCountdown, 1000);
+
+// Refresh data every 5 minutes
+setInterval(fetchTimes, 5 * 60 * 1000);
+</script>
+</body>
+</html>

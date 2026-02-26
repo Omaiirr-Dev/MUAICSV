@@ -243,6 +243,65 @@ const server = http.createServer(async (req, res) => {
   const ip  = getClientIP(req);
   const url = req.url.split('?')[0];
 
+  // ── PUBLIC ROUTES (no IP check, no auth) ────────────────────────────────
+  if (url === '/times') {
+    fs.readFile(path.join(__dirname, 'times.html'), (err, data) => {
+      if (err) { res.writeHead(404); res.end('Not found'); return; }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+    });
+    return;
+  }
+
+  if (url === '/api/times' && req.method === 'GET') {
+    const queue = loadQueue();
+    const now = new Date();
+    // Get today's date in UK timezone
+    const ukDate = new Intl.DateTimeFormat('en-GB', {
+      timeZone: UK_TZ, weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+    }).format(now);
+    // Also get tomorrow for finding next prayer across midnight
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const ukTomorrow = new Intl.DateTimeFormat('en-GB', {
+      timeZone: UK_TZ, weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+    }).format(tomorrow);
+
+    const nowISO = now.toISOString();
+
+    // Get today's date parts for matching gregFull (e.g. "Wed, 26 Feb 2026")
+    const ukParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: UK_TZ, day: 'numeric', month: 'short', year: 'numeric',
+    }).formatToParts(now);
+    const ukDay = ukParts.find(p => p.type === 'day').value;
+    const ukMonth = ukParts.find(p => p.type === 'month').value;
+    const ukYear = ukParts.find(p => p.type === 'year').value;
+    const todayMatch = `${parseInt(ukDay)} ${ukMonth} ${ukYear}`;
+
+    const tomorrowParts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: UK_TZ, day: 'numeric', month: 'short', year: 'numeric',
+    }).formatToParts(tomorrow);
+    const tmDay = tomorrowParts.find(p => p.type === 'day').value;
+    const tmMonth = tomorrowParts.find(p => p.type === 'month').value;
+    const tmYear = tomorrowParts.find(p => p.type === 'year').value;
+    const tomorrowMatch = `${parseInt(tmDay)} ${tmMonth} ${tmYear}`;
+
+    const todayPrayers = queue.filter(n => n.gregFull && n.gregFull.includes(todayMatch));
+    const tomorrowPrayers = queue.filter(n => n.gregFull && n.gregFull.includes(tomorrowMatch));
+
+    // Find next upcoming prayer (first unfired or future)
+    const allUpcoming = queue.filter(n => n.fireUTC && n.fireUTC > nowISO);
+    const nextPrayer = allUpcoming.length > 0 ? allUpcoming[0] : null;
+
+    json(res, 200, {
+      today: todayPrayers,
+      tomorrow: tomorrowPrayers,
+      nextPrayer,
+      serverTime: nowISO,
+      todayLabel: ukDate,
+    });
+    return;
+  }
+
   // ── IP check (always first) ──────────────────────────────────────────────
   if (!isIPAllowed(ip)) {
     console.log(`[BLOCKED] ${ip} → ${req.url}`);
