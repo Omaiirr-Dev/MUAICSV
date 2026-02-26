@@ -428,7 +428,10 @@ function renderPrayers(prayers, nextPrayer) {
   // Sort by order
   const sorted = prayers
     .map(p => {
-      const meta = PRAYER_META[p.title] || { name: p.title, icon: p.icon || '', order: 99 };
+      // Match Fajr title even when it includes "(Sunrise at ...)"
+      let meta = PRAYER_META[p.title];
+      if (!meta && p.title && p.title.startsWith('Fajr has begun')) meta = PRAYER_META['Fajr has begun'];
+      if (!meta) meta = { name: p.title, icon: p.icon || '', order: 99 };
       return { ...p, meta };
     })
     .sort((a, b) => a.meta.order - b.meta.order);
@@ -449,10 +452,12 @@ function renderPrayers(prayers, nextPrayer) {
     const stateClass = isNext ? 'active' : (isPast ? 'past' : '');
     const jamat = extractJamat(p.details);
 
-    // Fajr: append "(Sunrise at HH:MM)" to the name
+    // Fajr: show "(Sunrise at HH:MM)" from the title if present, or from sunrise entry
     let displayName = p.meta.name;
-    if (p.meta.order === 0 && sunriseTimeFmt) {
-      displayName += ` <span style="font-weight:400;font-size:0.72rem;color:var(--text-muted)">(Sunrise at ${sunriseTimeFmt})</span>`;
+    if (p.meta.order === 0) {
+      const sunMatch = p.title && p.title.match(/\(Sunrise at .+?\)/);
+      const sunNote = sunMatch ? sunMatch[0] : (sunriseTimeFmt ? `(Sunrise at ${sunriseTimeFmt})` : '');
+      if (sunNote) displayName += ` <span style="font-weight:400;font-size:0.72rem;color:var(--text-muted)">${sunNote}</span>`;
     }
 
     // Sunrise: show actual time as subtitle
