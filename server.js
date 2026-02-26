@@ -244,7 +244,11 @@ const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
 
   // ── PUBLIC ROUTES (no IP check, no auth) ────────────────────────────────
-  if (url === '/times') {
+  const host = (req.headers.host || '').toLowerCase();
+  const isPublicDomain = host.includes('muaiprayertimes');
+
+  // If visiting from the public domain, serve times.html at root
+  if (url === '/times' || (isPublicDomain && url === '/')) {
     fs.readFile(path.join(__dirname, 'times.html'), (err, data) => {
       if (err) { res.writeHead(404); res.end('Not found'); return; }
       res.writeHead(200, { 'Content-Type': 'text/html' });
