@@ -724,17 +724,19 @@ function buildNotifications(day) {
   const fajrLabel = day.sunrise ? `Fajr (Sunrise at ${fmtTime(day.sunrise)})` : 'Fajr';
 
   const notifs = [
-    { icon: '\ud83d\udd4b', title: fajrLabel, details: jamatDetail(fajrM, fajrJM, day.fajrJamat), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM) },
-    { icon: '\ud83c\udf05', title: 'Sunrise', details: fmtTime(day.sunrise), fireTimeFmt: fmtTime(day.sunrise), fireUTC: getFireUTC(sunriseM) },
-    { icon: '\u2600\ufe0f', title: zuhrLabel, details: jamatDetail(zuhrM, zuhrJM, day.zuhrJamat), fireTimeFmt: fmtTime(day.zuhrStart), fireUTC: getFireUTC(zuhrM) },
-    { icon: '\u26c5', title: 'Asr has begun', details: jamatDetail(asrM, asrJM, day.asrJamat), fireTimeFmt: fmtTime(day.asrStart), fireUTC: getFireUTC(asrM) },
-    { icon: '\ud83c\udf07', title: 'Maghrib has begun', details: jamatDetail(maghribM, maghribJM, day.maghribJamat), fireTimeFmt: fmtTime(day.maghribAdhan), fireUTC: getFireUTC(maghribM) },
-    { icon: '\ud83c\udf19', title: 'Isha has begun', details: jamatDetail(ishaM, ishaJM, day.ishaJamat), fireTimeFmt: fmtTime(day.ishaStart), fireUTC: getFireUTC(ishaM) },
+    { icon: '\ud83d\udd4b', title: fajrLabel, details: jamatDetail(fajrM, fajrJM, day.fajrJamat), fireTimeFmt: fmtTime(day.fajrStart), fireUTC: getFireUTC(fajrM), jamatUTC: getFireUTC(fajrJM), jamatTimeFmt: fmtTime(day.fajrJamat) },
+    { icon: '\ud83c\udf05', title: 'Sunrise', details: fmtTime(day.sunrise), fireTimeFmt: fmtTime(day.sunrise), fireUTC: getFireUTC(sunriseM), jamatUTC: null, jamatTimeFmt: null },
+    { icon: '\u2600\ufe0f', title: zuhrLabel, details: jamatDetail(zuhrM, zuhrJM, day.zuhrJamat), fireTimeFmt: fmtTime(day.zuhrStart), fireUTC: getFireUTC(zuhrM), jamatUTC: getFireUTC(zuhrJM), jamatTimeFmt: fmtTime(day.zuhrJamat) },
+    { icon: '\u26c5', title: 'Asr has begun', details: jamatDetail(asrM, asrJM, day.asrJamat), fireTimeFmt: fmtTime(day.asrStart), fireUTC: getFireUTC(asrM), jamatUTC: getFireUTC(asrJM), jamatTimeFmt: fmtTime(day.asrJamat) },
+    { icon: '\ud83c\udf07', title: 'Maghrib has begun', details: jamatDetail(maghribM, maghribJM, day.maghribJamat), fireTimeFmt: fmtTime(day.maghribAdhan), fireUTC: getFireUTC(maghribM), jamatUTC: getFireUTC(maghribJM), jamatTimeFmt: fmtTime(day.maghribJamat) },
+    { icon: '\ud83c\udf19', title: 'Isha has begun', details: jamatDetail(ishaM, ishaJM, day.ishaJamat), fireTimeFmt: fmtTime(day.ishaStart), fireUTC: getFireUTC(ishaM), jamatUTC: getFireUTC(ishaJM), jamatTimeFmt: fmtTime(day.ishaJamat) },
   ];
 
   return notifs.map(n => ({
     icon: n.icon, title: n.title, details: n.details, countdown: null,
-    fireTimeFmt: n.fireTimeFmt, fireUTC: n.fireUTC, priority: 'urgent', gregFull: day.gregFull,
+    fireTimeFmt: n.fireTimeFmt, fireUTC: n.fireUTC,
+    jamatUTC: n.jamatUTC, jamatTimeFmt: n.jamatTimeFmt,
+    priority: 'urgent', gregFull: day.gregFull,
   }));
 }
 
