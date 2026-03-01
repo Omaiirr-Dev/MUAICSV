@@ -177,6 +177,81 @@
       margin-top: 2px;
     }
 
+    .countdown-jamat-row {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .countdown-jamat-row.visible { display: block; }
+    .countdown-jamat-label {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+    .countdown-jamat-time {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+    }
+    .countdown-jamat-at {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* ── Jamat toggle ── */
+    .jamat-toggle-wrap {
+      max-width: 480px;
+      margin: 10px auto 0;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .jamat-toggle-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 2px; bottom: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--navy);
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(16px);
+    }
+
     /* ── Prayer list ── */
     .prayer-section {
       max-width: 480px;
@@ -522,7 +597,20 @@
     <div class="countdown-at" id="cd-at">&mdash;</div>
     <div class="countdown-time" id="cd-time">&mdash;</div>
     <div class="countdown-remaining-label" id="cd-remaining-label">remaining</div>
+    <div class="countdown-jamat-row" id="cd-jamat-row">
+      <div class="countdown-jamat-label">Jama'ah in</div>
+      <div class="countdown-jamat-time" id="cd-jamat-time">&mdash;</div>
+      <div class="countdown-jamat-at" id="cd-jamat-at"></div>
+    </div>
   </div>
+</div>
+
+<div class="jamat-toggle-wrap">
+  <span class="jamat-toggle-label">Show Jama'ah countdown</span>
+  <label class="toggle-switch">
+    <input type="checkbox" id="jamat-toggle" />
+    <span class="toggle-slider"></span>
+  </label>
 </div>
 
 <div class="prayer-section">
@@ -593,8 +681,25 @@ function lookupMeta(title) {
 }
 
 let nextPrayerUTC = null;
+let nextJamatUTC = null;
 let allDays = []; // all days from queue for calendar
 let calDayIndex = 0;
+
+// ── Jama'ah toggle ──
+const jamatToggle = document.getElementById('jamat-toggle');
+const jamatRow = document.getElementById('cd-jamat-row');
+jamatToggle.checked = localStorage.getItem('showJamat') === 'true';
+function applyJamatToggle() {
+  const on = jamatToggle.checked;
+  localStorage.setItem('showJamat', on);
+  if (on && nextJamatUTC) {
+    jamatRow.classList.add('visible');
+  } else {
+    jamatRow.classList.remove('visible');
+  }
+}
+jamatToggle.addEventListener('change', applyJamatToggle);
+applyJamatToggle();
 
 function fmtCountdown(ms) {
   if (ms <= 0) return '0:00';
@@ -618,6 +723,13 @@ function tickCountdown() {
   } else {
     el.textContent = fmtCountdown(diff);
     labelEl.textContent = 'remaining';
+  }
+
+  // Jama'ah countdown
+  const jamatEl = document.getElementById('cd-jamat-time');
+  if (nextJamatUTC) {
+    const jDiff = new Date(nextJamatUTC).getTime() - Date.now();
+    jamatEl.textContent = jDiff <= 0 ? 'Now' : fmtCountdown(jDiff);
   }
 }
 
@@ -725,16 +837,25 @@ async function fetchTimes() {
 
     if (data.nextPrayer && data.nextPrayer.fireUTC) {
       nextPrayerUTC = data.nextPrayer.fireUTC;
+      nextJamatUTC = data.nextPrayer.jamatUTC || null;
       const meta = lookupMeta(data.nextPrayer.title);
 
       document.getElementById('cd-prayer').textContent = meta.name;
       document.getElementById('cd-at').textContent = data.nextPrayer.fireTimeFmt || '';
+
+      // Jama'ah info
+      if (nextJamatUTC) {
+        document.getElementById('cd-jamat-at').textContent = data.nextPrayer.jamatTimeFmt || '';
+      }
+      applyJamatToggle();
       tickCountdown();
     } else {
       document.getElementById('cd-prayer').textContent = '\u2014';
       document.getElementById('cd-time').textContent = '\u2014';
       document.getElementById('cd-at').textContent = '';
       document.getElementById('cd-remaining-label').textContent = 'No upcoming prayers';
+      nextJamatUTC = null;
+      applyJamatToggle();
     }
 
     // Build calendar from all queue data

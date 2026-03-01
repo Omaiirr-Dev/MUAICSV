@@ -1,6 +1,6 @@
-// MUAI Prayer Times — Scriptable Widget
+// MUAI Prayer Times — Scriptable Widget (Jama'ah version)
 // Fetches once per day, runs from cache. Always live timer.
-// Counts down to next prayer. Switches 10 min early so timer never hits zero.
+// Counts down: prayer → jama'ah → next prayer. Switches 10 min early.
 
 const API = 'https://muaiprayertimes.xyz/api/times';
 const SKIP_MS = 10 * 60 * 1000; // switch 10 min early
@@ -51,18 +51,27 @@ async function getData() {
   }
 }
 
-// Build sorted prayer list (prayer start times only, no jama'ah)
+// Build sorted event list: prayer starts + jama'ah times
 function buildEvents(data) {
   const prayers = (data.today || [])
     .concat(data.tomorrow || [])
     .filter(p => p.fireUTC)
     .sort((a, b) => new Date(a.fireUTC).getTime() - new Date(b.fireUTC).getTime());
 
-  return prayers.map(p => ({
-    ms: new Date(p.fireUTC).getTime(),
-    label: getName(p.title),
-    sublabel: p.fireTimeFmt || '',
-  }));
+  const events = [];
+  for (const p of prayers) {
+    const name = getName(p.title);
+    const fireMs = new Date(p.fireUTC).getTime();
+    events.push({ ms: fireMs, label: name, sublabel: p.fireTimeFmt || '' });
+    if (p.jamatUTC) {
+      const jamatMs = new Date(p.jamatUTC).getTime();
+      if (jamatMs > fireMs) {
+        events.push({ ms: jamatMs, label: `${name} - Jama'ah`, sublabel: p.jamatTimeFmt || '' });
+      }
+    }
+  }
+  events.sort((a, b) => a.ms - b.ms);
+  return events;
 }
 
 // Find what to display: pick the first event > 10 min away
