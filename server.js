@@ -296,7 +296,7 @@ const server = http.createServer(async (req, res) => {
     const ukDay = ukParts.find(p => p.type === 'day').value;
     const ukMonth = ukParts.find(p => p.type === 'month').value;
     const ukYear = ukParts.find(p => p.type === 'year').value;
-    const todayMatch = `${parseInt(ukDay)} ${ukMonth} ${ukYear}`;
+    const todayMatch = `, ${parseInt(ukDay)} ${ukMonth} ${ukYear}`;
 
     const tomorrowParts = new Intl.DateTimeFormat('en-GB', {
       timeZone: UK_TZ, day: 'numeric', month: 'short', year: 'numeric',
@@ -304,7 +304,7 @@ const server = http.createServer(async (req, res) => {
     const tmDay = tomorrowParts.find(p => p.type === 'day').value;
     const tmMonth = tomorrowParts.find(p => p.type === 'month').value;
     const tmYear = tomorrowParts.find(p => p.type === 'year').value;
-    const tomorrowMatch = `${parseInt(tmDay)} ${tmMonth} ${tmYear}`;
+    const tomorrowMatch = `, ${parseInt(tmDay)} ${tmMonth} ${tmYear}`;
 
     const todayPrayers = queue.filter(n => n.gregFull && n.gregFull.includes(todayMatch));
     const tomorrowPrayers = queue.filter(n => n.gregFull && n.gregFull.includes(tomorrowMatch));
