@@ -682,6 +682,8 @@ function lookupMeta(title) {
 
 let nextPrayerUTC = null;
 let nextJamatUTC = null;
+let nextJamatLabel = '';
+let todayPrayers = []; // stored so we can recalculate next jama'ah
 let allDays = []; // all days from queue for calendar
 let calDayIndex = 0;
 
@@ -700,6 +702,18 @@ function applyJamatToggle() {
 }
 jamatToggle.addEventListener('change', applyJamatToggle);
 applyJamatToggle();
+
+// Find the next jama'ah that hasn't passed yet from ALL today's prayers
+function findNextJamat() {
+  const nowISO = new Date().toISOString();
+  for (const p of todayPrayers) {
+    if (p.jamatUTC && p.jamatUTC > nowISO) {
+      const meta = lookupMeta(p.title);
+      return { utc: p.jamatUTC, timeFmt: p.jamatTimeFmt || '', name: meta.name };
+    }
+  }
+  return null;
+}
 
 function fmtCountdown(ms) {
   if (ms <= 0) return '0:00';
@@ -725,11 +739,26 @@ function tickCountdown() {
     labelEl.textContent = 'remaining';
   }
 
-  // Jama'ah countdown
-  const jamatEl = document.getElementById('cd-jamat-time');
+  // Jama'ah countdown — independently find next upcoming jama'ah
   if (nextJamatUTC) {
     const jDiff = new Date(nextJamatUTC).getTime() - Date.now();
-    jamatEl.textContent = jDiff <= 0 ? 'Now' : fmtCountdown(jDiff);
+    const jamatEl = document.getElementById('cd-jamat-time');
+    if (jDiff <= 0) {
+      // This jama'ah has passed — find the next one
+      const next = findNextJamat();
+      if (next) {
+        nextJamatUTC = next.utc;
+        nextJamatLabel = next.name;
+        document.getElementById('cd-jamat-at').textContent = `${next.name} · ${next.timeFmt}`;
+        jamatEl.textContent = fmtCountdown(new Date(next.utc).getTime() - Date.now());
+      } else {
+        nextJamatUTC = null;
+        jamatEl.textContent = '—';
+        applyJamatToggle();
+      }
+    } else {
+      jamatEl.textContent = fmtCountdown(jDiff);
+    }
   }
 }
 
@@ -835,17 +864,26 @@ async function fetchTimes() {
     document.getElementById('hero-date').textContent = data.todayLabel || '';
     renderPrayers(data.today, data.nextPrayer);
 
+    // Store today's prayers (sorted by jamatUTC) for jama'ah lookup
+    todayPrayers = (data.today || [])
+      .filter(p => p.jamatUTC)
+      .sort((a, b) => a.jamatUTC.localeCompare(b.jamatUTC));
+
     if (data.nextPrayer && data.nextPrayer.fireUTC) {
       nextPrayerUTC = data.nextPrayer.fireUTC;
-      nextJamatUTC = data.nextPrayer.jamatUTC || null;
       const meta = lookupMeta(data.nextPrayer.title);
 
       document.getElementById('cd-prayer').textContent = meta.name;
       document.getElementById('cd-at').textContent = data.nextPrayer.fireTimeFmt || '';
 
-      // Jama'ah info
-      if (nextJamatUTC) {
-        document.getElementById('cd-jamat-at').textContent = data.nextPrayer.jamatTimeFmt || '';
+      // Find next upcoming jama'ah independently of nextPrayer
+      const nextJamat = findNextJamat();
+      if (nextJamat) {
+        nextJamatUTC = nextJamat.utc;
+        nextJamatLabel = nextJamat.name;
+        document.getElementById('cd-jamat-at').textContent = `${nextJamat.name} · ${nextJamat.timeFmt}`;
+      } else {
+        nextJamatUTC = null;
       }
       applyJamatToggle();
       tickCountdown();
