@@ -73,7 +73,8 @@ function setCookieHeader(token) {
 }
 
 // ─── QUEUE PERSISTENCE ────────────────────────────────────────────────────────
-const QUEUE_FILE = path.join(__dirname, 'queue.json');
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+const QUEUE_FILE = path.join(DATA_DIR, 'queue.json');
 
 function loadQueue() {
   try {
@@ -609,8 +610,19 @@ async function schedulerTick() {
   const nowISO = new Date().toISOString();
 
   // Find notifications that are due (fireUTC <= now) and haven't been fired yet
-  const due = queue.filter(n => n.fireUTC && !n.firedToNtfy && n.fireUTC <= nowISO);
+  // Only fire if less than 5 minutes old — prevents mass-firing after server restart
+  const GRACE_MS = 5 * 60 * 1000;
+  const graceISO = new Date(Date.now() - GRACE_MS).toISOString();
+  const due = queue.filter(n => n.fireUTC && !n.firedToNtfy && n.fireUTC <= nowISO && n.fireUTC >= graceISO);
 
+  // Mark old missed notifications as fired so they never re-fire
+  const stale = queue.filter(n => n.fireUTC && !n.firedToNtfy && n.fireUTC < graceISO);
+  if (stale.length > 0) {
+    for (const n of stale) n.firedToNtfy = true;
+    console.log(`[SCHEDULER] Marked ${stale.length} stale notifications as fired (missed)`);
+  }
+
+  if (due.length === 0 && stale.length > 0) { saveQueue(queue); return; }
   if (due.length === 0) return;
 
   let pushed = 0;
