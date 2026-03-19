@@ -102,14 +102,14 @@ const EMOJI_TO_TAG = {
 async function pushToNtfy(notification) {
   const url = NTFY_SERVER;
   const message = [notification.details, notification.countdown].filter(Boolean).join('\n') || notification.title;
-  const tag = EMOJI_TO_TAG[notification.icon] || 'bell';
+  const tag = EMOJI_TO_TAG[notification.icon];
 
   const payload = {
     topic:    NTFY_CHANNEL,
     title:    notification.title,
     message,
     priority: 5,
-    tags:     [tag],
+    tags:     tag ? [tag] : [],
   };
   // No delay — fire immediately
 
