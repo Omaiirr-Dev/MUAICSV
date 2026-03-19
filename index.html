@@ -86,6 +86,26 @@
     .btn-danger { background: #1a0e0e; color: #c06060; border-color: #3a1818; }
     .btn-ntfy { background: var(--red); color: #e0c0c0; border-color: #4a1a1a; font-weight: 600; letter-spacing: 0.03em; }
     .btn.active { background: var(--accent-dim); color: #ddd; border-color: var(--accent); }
+    .btn-wipe { background: #1a1a0e; color: #b0a040; border-color: #3a3818; font-weight: 500; }
+    .btn-send { background: #0e1a1a; color: #40a0b0; border-color: #183a3a; font-weight: 600; }
+
+    /* ── Message board ── */
+    .msg-board { display: flex; flex-direction: column; gap: 10px; }
+    .msg-board input, .msg-board textarea {
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 4px; padding: 8px 12px; font-size: 0.8rem;
+      font-family: inherit; resize: vertical;
+    }
+    .msg-board input:focus, .msg-board textarea:focus { outline: none; border-color: var(--accent); }
+    .msg-board textarea { min-height: 60px; }
+    .msg-schedule-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .msg-schedule-row label { font-size: 0.72rem; color: var(--text-muted); }
+    .msg-schedule-row input[type="datetime-local"] {
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 4px; padding: 5px 8px; font-size: 0.75rem; font-family: inherit;
+    }
+    .msg-actions { display: flex; gap: 8px; align-items: center; }
+    .msg-status { font-size: 0.72rem; margin-left: 8px; }
 
     /* ── Month info bar ── */
     .month-bar {
@@ -417,6 +437,24 @@
 
   </div>
 
+  <!-- Message Board — send custom notifications -->
+  <div class="section" style="margin-top: 20px;">
+    <div class="section-title">Message Board</div>
+    <div class="msg-board">
+      <input type="text" id="msg-title" placeholder="Header (e.g. Ramadan Announcement)" maxlength="120" />
+      <textarea id="msg-body" placeholder="Message body..." maxlength="500"></textarea>
+      <div class="msg-schedule-row">
+        <label>Schedule for:</label>
+        <input type="datetime-local" id="msg-schedule" />
+        <span style="font-size:0.68rem;color:var(--text-muted);">Leave empty to send now</span>
+      </div>
+      <div class="msg-actions">
+        <button class="btn btn-send" id="msg-send-btn">Send Now</button>
+        <span class="msg-status" id="msg-status"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- Queue — always visible, syncs across all users -->
   <div id="section-queue" class="section" style="margin-top: 20px;">
     <div class="section-title">Notification Queue</div>
@@ -427,6 +465,7 @@
         <div class="sched-count" id="sched-count">Loading...</div>
       </div>
       <div class="sched-actions">
+        <button class="btn btn-wipe" id="wipe-fired-btn">Wipe fired</button>
         <button class="btn btn-danger" id="delete-future-btn">Delete future</button>
       </div>
     </div>
@@ -1199,6 +1238,71 @@ document.getElementById('delete-future-btn').addEventListener('click', async () 
     showAlert(`Delete failed: ${e.message}`, 'error');
   } finally {
     btn.disabled = false; btn.textContent = 'Delete future';
+  }
+});
+
+// Wipe fired notifications
+document.getElementById('wipe-fired-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('wipe-fired-btn');
+  btn.disabled = true; btn.textContent = 'Wiping\u2026';
+  try {
+    const resp = await fetch('/api/queue/fired', { method: 'DELETE' });
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+    const result = await resp.json();
+    showAlert(`Wiped ${result.removed} fired notifications. ${result.remaining} remain.`, 'success');
+    await fetchAndRenderQueue();
+  } catch (e) {
+    showAlert(`Wipe failed: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Wipe fired';
+  }
+});
+
+// Message board — send or schedule custom notification
+const msgScheduleInput = document.getElementById('msg-schedule');
+msgScheduleInput.addEventListener('input', () => {
+  document.getElementById('msg-send-btn').textContent = msgScheduleInput.value ? 'Schedule' : 'Send Now';
+});
+
+document.getElementById('msg-send-btn').addEventListener('click', async () => {
+  const title = document.getElementById('msg-title').value.trim();
+  const message = document.getElementById('msg-body').value.trim();
+  const schedule = msgScheduleInput.value;
+  const statusEl = document.getElementById('msg-status');
+
+  if (!title || !message) { statusEl.textContent = 'Title and message required'; statusEl.style.color = '#c06060'; return; }
+
+  const btn = document.getElementById('msg-send-btn');
+  btn.disabled = true; btn.textContent = 'Sending\u2026';
+  statusEl.textContent = '';
+
+  try {
+    const body = { title, message };
+    if (schedule) body.schedule = new Date(schedule).toISOString();
+
+    const resp = await fetch('/api/message', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+    const result = await resp.json();
+
+    if (result.status === 'sent') {
+      statusEl.textContent = 'Sent!'; statusEl.style.color = '#40b040';
+    } else if (result.status === 'scheduled') {
+      statusEl.textContent = 'Scheduled!'; statusEl.style.color = '#40a0b0';
+      await fetchAndRenderQueue();
+    } else {
+      statusEl.textContent = 'Failed to send'; statusEl.style.color = '#c06060';
+    }
+
+    document.getElementById('msg-title').value = '';
+    document.getElementById('msg-body').value = '';
+    msgScheduleInput.value = '';
+  } catch (e) {
+    statusEl.textContent = `Error: ${e.message}`; statusEl.style.color = '#c06060';
+  } finally {
+    btn.disabled = false; btn.textContent = schedule ? 'Schedule' : 'Send Now';
   }
 });
 

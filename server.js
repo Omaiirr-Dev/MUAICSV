@@ -31,7 +31,7 @@ const PORT           = process.env.PORT || 3000;
 const PASSWORD       = process.env.PASSWORD || 'qaws';
 const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
                          .split(',').map(s => s.trim());
-const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'muaiprayertest';
+const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'muaiprayer';
 const NTFY_SERVER    = process.env.NTFY_SERVER   || 'https://ntfy.sh';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
@@ -521,6 +521,49 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
     const merged = Array.from(map.values()).sort((a, b) => a.fireUTC.localeCompare(b.fireUTC));
     saveQueue(merged);
     json(res, 200, { saved: merged.length, queue: merged });
+    return;
+  }
+
+  // ── API: DELETE /api/queue/fired — remove already-fired notifications ────
+  if (url === '/api/queue/fired' && req.method === 'DELETE') {
+    const queue = loadQueue();
+    const kept = queue.filter(n => !n.firedToNtfy);
+    const removed = queue.length - kept.length;
+    saveQueue(kept);
+    json(res, 200, { removed, remaining: kept.length });
+    return;
+  }
+
+  // ── API: POST /api/message — send a custom message via ntfy ─────────────
+  if (url === '/api/message' && req.method === 'POST') {
+    const raw = await parseBody(req);
+    let body;
+    try { body = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
+
+    const { title, message, schedule } = body;
+    if (!title || !message) { json(res, 400, { error: 'title and message required' }); return; }
+
+    if (schedule) {
+      // Schedule for later — add to queue
+      const fireUTC = new Date(schedule).toISOString();
+      const notification = {
+        icon: '📢', title, details: message, fireUTC,
+        fireTimeFmt: new Date(schedule).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Europe/London' }),
+        gregFull: new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(schedule)),
+        priority: 'default',
+      };
+      const queue = loadQueue();
+      queue.push(notification);
+      queue.sort((a, b) => (a.fireUTC || '').localeCompare(b.fireUTC || ''));
+      saveQueue(queue);
+      console.log(`[MESSAGE] Scheduled "${title}" for ${fireUTC}`);
+      json(res, 200, { status: 'scheduled', fireUTC });
+    } else {
+      // Send immediately
+      const ok = await pushToNtfy({ icon: '📢', title, details: message, priority: 'default' });
+      console.log(`[MESSAGE] Sent "${title}" immediately — ${ok ? 'OK' : 'FAILED'}`);
+      json(res, 200, { status: ok ? 'sent' : 'failed' });
+    }
     return;
   }
 
