@@ -557,9 +557,13 @@ function normaliseDay(cell) {
   return DAY_NAMES.find(d => d.toLowerCase() === s) || '';
 }
 
+let dayCol = 1; // column index where day names appear (auto-detected)
+
 function findDataStart(rows) {
   for (let i = 0; i < rows.length; i++) {
-    if (normaliseDay(rows[i][1])) return i;
+    for (let c = 0; c <= 2; c++) {
+      if (normaliseDay(rows[i][c])) { dayCol = c; return i; }
+    }
   }
   return -1;
 }
@@ -605,7 +609,7 @@ function parsePrayerData(rows) {
 
   if (runningMonth === -1) {
     for (let i = dataStart; i < rows.length; i++) {
-      const cell = (rows[i][3] || '').trim();
+      const cell = (rows[i][dayCol + 2] || '').trim();
       const mi = matchMonth(cell);
       if (mi !== -1) {
         runningMonth = mi === 0 ? 11 : mi - 1;
@@ -615,20 +619,26 @@ function parsePrayerData(rows) {
     }
   }
 
+  // Column offsets relative to dayCol:
+  // dayCol+0=Day, dayCol+1=Hijri, dayCol+2=Greg, dayCol+3=FajrStart, dayCol+4=FajrJamat,
+  // dayCol+5=Sunrise, dayCol+6=ZuhrStart, dayCol+7=ZuhrJamat, dayCol+8=AsrStart, dayCol+9=AsrJamat,
+  // dayCol+10=Maghrib, dayCol+11=MaghribJamat, dayCol+12=IshaStart, dayCol+13=IshaJamat
+  const D = dayCol;
+
   for (let i = dataStart; i < rows.length; i++) {
     const r = rows[i];
-    const dayName = normaliseDay(r[1]);
+    const dayName = normaliseDay(r[D]);
 
     if (!dayName) {
       // Skip non-data rows (e.g. "CLOCK CHANGE", "BST", notes)
       const rowText = r.join(' ').toLowerCase();
       if (rowText.includes('clock change') || rowText.includes('bst') || rowText.includes('gmt')) continue;
-      const mi = matchMonth(r[3]);
+      const mi = matchMonth(r[D+2]);
       if (mi !== -1) runningMonth = mi;
       continue;
     }
 
-    const gregRaw = (r[3] || '').trim();
+    const gregRaw = (r[D+2] || '').trim();
     const gregMonthIdx = matchMonth(gregRaw);
 
     let gregDayNum;
@@ -659,20 +669,20 @@ function parsePrayerData(rows) {
     const gregMonth = runningMonth;
     const gregDay   = gregDayNum;
 
-    const fajrJamat    = resolveTime(r[5],  last.fajrJamat);
-    const zuhrJamat    = resolveTime(r[8],  last.zuhrJamat);
-    const asrJamat     = resolveTime(r[10], last.asrJamat);
-    const maghribJamat = resolveTime(r[12], last.maghribJamat);
-    const ishaJamat    = resolveTime(r[14], last.ishaJamat);
+    const fajrJamat    = resolveTime(r[D+4],  last.fajrJamat);
+    const zuhrJamat    = resolveTime(r[D+7],  last.zuhrJamat);
+    const asrJamat     = resolveTime(r[D+9],  last.asrJamat);
+    const maghribJamat = resolveTime(r[D+11], last.maghribJamat);
+    const ishaJamat    = resolveTime(r[D+13], last.ishaJamat);
 
     last.fajrJamat = fajrJamat; last.zuhrJamat = zuhrJamat; last.asrJamat = asrJamat;
     last.maghribJamat = maghribJamat; last.ishaJamat = ishaJamat;
 
     days.push({
-      day: dayName, hijriDate: r[2] || '', gregDate: gregRaw, gregFull, gregYear, gregMonth, gregDay,
-      fajrStart: r[4] || '', fajrJamat, sunrise: r[6] || '',
-      zuhrStart: r[7] || '', zuhrJamat, asrStart: r[9] || '', asrJamat,
-      maghribAdhan: r[11] || '', maghribJamat, ishaStart: r[13] || '', ishaJamat,
+      day: dayName, hijriDate: r[D+1] || '', gregDate: gregRaw, gregFull, gregYear, gregMonth, gregDay,
+      fajrStart: r[D+3] || '', fajrJamat, sunrise: r[D+5] || '',
+      zuhrStart: r[D+6] || '', zuhrJamat, asrStart: r[D+8] || '', asrJamat,
+      maghribAdhan: r[D+10] || '', maghribJamat, ishaStart: r[D+12] || '', ishaJamat,
     });
   }
 

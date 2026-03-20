@@ -477,7 +477,7 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
           model: 'gpt-5-chat-latest',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: body.csv },
+            { role: 'user', content: `IMPORTANT: Count the data rows below carefully. You must output the EXACT same number of day objects.\n\n${body.csv}` },
           ],
           temperature: 0,
           max_tokens: 16384,
