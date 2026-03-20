@@ -294,6 +294,7 @@
       display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px;
     }
   </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -310,7 +311,7 @@
   <div class="section" id="section-upload">
     <div class="section-title">Import CSV</div>
     <div class="upload-zone" id="drop-zone">
-      <input type="file" id="csv-file" accept=".csv" />
+      <input type="file" id="csv-file" accept=".csv,.xls,.xlsx" />
       <div class="upload-icon"></div>
       <h2>Drop your prayer times CSV here</h2>
       <p>or click to browse</p>
@@ -1105,13 +1106,35 @@ async function fetchAndRenderQueue() {
 const fileInput = document.getElementById('csv-file');
 const dropZone = document.getElementById('drop-zone');
 
+function isSpreadsheet(filename) {
+  return /\.(xls|xlsx)$/i.test(filename);
+}
+
+function readFile(file) {
+  const reader = new FileReader();
+  if (isSpreadsheet(file.name)) {
+    reader.onload = ev => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        markAccepted(file.name);
+        handleCSVText(csv);
+      } catch (err) {
+        showAlert('Failed to read spreadsheet: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
+    reader.readAsText(file);
+  }
+}
+
 dropZone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', e => {
   const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
-  reader.readAsText(file);
+  if (file) readFile(file);
 });
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
@@ -1119,10 +1142,7 @@ dropZone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagat
 dropZone.addEventListener('drop', e => {
   e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
-  reader.readAsText(file);
+  if (file) readFile(file);
 });
 
 function markAccepted(filename) {
