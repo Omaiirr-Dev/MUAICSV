@@ -33,7 +33,7 @@ const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
                          .split(',').map(s => s.trim());
 const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'muaiprayer';
 const NTFY_SERVER    = process.env.NTFY_SERVER   || 'https://ntfy.sh';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 // Session tokens: token -> expiry timestamp
 const sessions = new Map();
@@ -400,13 +400,13 @@ const server = http.createServer(async (req, res) => {
 
   // ── API: GET /api/ai-available — check if OpenAI key is configured ──────
   if (url === '/api/ai-available' && req.method === 'GET') {
-    json(res, 200, { available: !!OPENAI_API_KEY });
+    json(res, 200, { available: !!GEMINI_API_KEY });
     return;
   }
 
-  // ── API: POST /api/ai-parse — use OpenAI to extract prayer times ──────
+  // ── API: POST /api/ai-parse — use Gemini to extract prayer times ──────
   if (url === '/api/ai-parse' && req.method === 'POST') {
-    if (!OPENAI_API_KEY) { json(res, 501, { error: 'OpenAI API key not configured' }); return; }
+    if (!GEMINI_API_KEY) { json(res, 501, { error: 'Gemini API key not configured' }); return; }
 
     const raw = await parseBody(req);
     let body;
@@ -466,42 +466,45 @@ CRITICAL RULES — READ CAREFULLY:
 
 Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
 
+    const GEMINI_MODEL = 'gemini-2.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
     try {
-      const openaiResp = await fetch('https://api.openai.com/v1/chat/completions', {
+      const geminiResp = await fetch(geminiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'gpt-5-chat-latest',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `IMPORTANT: Count the data rows below carefully. You must output the EXACT same number of day objects.\n\n${body.csv}` },
-          ],
-          temperature: 0,
-          max_tokens: 16384,
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{
+            role: 'user',
+            parts: [{ text: `IMPORTANT: Count the data rows below carefully. You must output the EXACT same number of day objects.\n\n${body.csv}` }],
+          }],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: 65536,
+            responseMimeType: 'application/json',
+          },
         }),
       });
 
-      if (!openaiResp.ok) {
-        const errText = await openaiResp.text().catch(() => '');
-        console.error(`[AI] OpenAI ${openaiResp.status}: ${errText}`);
-        let detail = `OpenAI ${openaiResp.status}`;
+      if (!geminiResp.ok) {
+        const errText = await geminiResp.text().catch(() => '');
+        console.error(`[AI] Gemini ${geminiResp.status}: ${errText}`);
+        let detail = `Gemini ${geminiResp.status}`;
         try { detail = JSON.parse(errText).error?.message || detail; } catch {}
         json(res, 502, { error: detail });
         return;
       }
 
-      const result = await openaiResp.json();
-      const content = result.choices?.[0]?.message?.content || '';
+      const result = await geminiResp.json();
+      const content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-      // Strip markdown fences if the model wraps them despite instructions
+      // Strip markdown fences if present
       const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch {
-        console.error('[AI] Failed to parse OpenAI response:', content.slice(0, 500));
+        console.error('[AI] Failed to parse Gemini response:', content.slice(0, 500));
         json(res, 502, { error: 'AI returned invalid JSON' });
         return;
       }
@@ -511,7 +514,7 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
         return;
       }
 
-      console.log(`[AI] Parsed ${parsed.days.length} days from CSV (model: gpt-5-chat-latest)`);
+      console.log(`[AI] Parsed ${parsed.days.length} days from CSV (model: ${GEMINI_MODEL})`);
       json(res, 200, parsed);
     } catch (e) {
       console.error('[AI] Error:', e.message);
