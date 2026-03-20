@@ -619,6 +619,9 @@ function parsePrayerData(rows) {
     const dayName = normaliseDay(r[1]);
 
     if (!dayName) {
+      // Skip non-data rows (e.g. "CLOCK CHANGE", "BST", notes)
+      const rowText = r.join(' ').toLowerCase();
+      if (rowText.includes('clock change') || rowText.includes('bst') || rowText.includes('gmt')) continue;
       const mi = matchMonth(r[3]);
       if (mi !== -1) runningMonth = mi;
       continue;
@@ -692,7 +695,9 @@ function resolveSequential(times) {
   return times.map(t => {
     if (!t) return null;
     let mins = t.h * 60 + t.m;
-    if (mins < prev) mins += 12 * 60;
+    // If time is already in 24h (h >= 12), use as-is
+    // Otherwise, if it's less than the previous time, add 12h (AM→PM transition)
+    if (t.h < 12 && mins < prev) mins += 12 * 60;
     prev = mins;
     return mins;
   });

@@ -425,22 +425,35 @@ const server = http.createServer(async (req, res) => {
 Output format — return a JSON object with "title" (string) and "days" (array). Each day object:
 {"day":"Mon","hijriDate":"1","gregDate":"3","gregFull":"Mon, 3 Mar 2025","gregYear":2025,"gregMonth":2,"gregDay":3,"fajrStart":"5:23","fajrJamat":"5:38","sunrise":"6:45","zuhrStart":"12:30","zuhrJamat":"13:00","asrStart":"15:45","asrJamat":"16:15","maghribAdhan":"17:27","maghribJamat":"17:27","ishaStart":"19:45","ishaJamat":"20:15"}
 
-You MUST output ALL rows from the CSV — every single day, not just one.
+CRITICAL RULES — READ CAREFULLY:
 
-Rules:
-1. Sunset = Maghrib. Any column called Sunset/Sun Set/Iftar/Maghrib → maghribAdhan. Read the actual per-row value.
-2. Times in 24h format. CSV times after Zuhr are PM: "3:36" Asr → "15:36", "5:27" sunset → "17:27", "6:59" Isha → "18:59". Fajr/Sunrise are AM, keep as-is.
-3. Extract BOTH adhan/start times AND jamat/congregation/iqamah times. Fill in all jamat fields.
-4. Ditto marks (") in CSV mean "same as the row above" — repeat the previous row's value.
-5. If a jamat column contains text instructions instead of times, interpret them:
+1. You MUST output EVERY SINGLE DAY from the CSV. If the CSV spans March 20 to April 30, output ALL days from March 20 to April 30. Do NOT stop at the end of a month. Do NOT skip any days. Count your output rows — they must match the CSV rows exactly.
+
+2. Copy times EXACTLY as they appear in the CSV. Do NOT round, adjust, or estimate times. If the CSV says "5:08", output "5:08" — not "5:10" or "5:05". Every minute matters for prayer times.
+
+3. Times in 24h format. CSV times after Zuhr are PM: "3:36" Asr → "15:36", "5:27" sunset → "17:27", "6:59" Isha → "18:59". Fajr/Sunrise are AM, keep as-is.
+
+4. Sunset = Maghrib. Any column called Sunset/Sun Set/Iftar/Maghrib → maghribAdhan. Read the actual per-row value.
+
+5. Extract BOTH adhan/start times AND jamat/congregation/iqamah times. Fill in all jamat fields.
+
+6. Ditto marks (") in CSV mean "same as the row above" — repeat the previous row's value.
+
+7. If a jamat column contains text instructions instead of times, interpret them:
    - "15 minutes after suhur end/fajr beginning" → fajrJamat = fajrStart + 15 minutes
    - "straight after breaking fast" or "straight after iftar" → maghribJamat = same as maghribAdhan
    - Any "X minutes after [prayer]" → add X minutes to that prayer's start time
    Apply the computed time to ALL rows, not just one.
-6. If no jamat time exists for a prayer, set it to empty string "".
-7. gregMonth is 0-indexed (Jan=0). Day names: Mon,Tue,Wed,Thu,Fri,Sat,Sun.
-8. Dates are for the current/upcoming month, never past. Use today's date for context.
-9. title: Islamic month if identifiable (e.g. "Ramadan 1447 AH").
+
+8. If no jamat time exists for a prayer, set it to empty string "".
+
+9. gregMonth is 0-indexed (Jan=0). Day names: Mon,Tue,Wed,Thu,Fri,Sat,Sun.
+
+10. When months change (e.g. March → April), continue incrementing dates naturally. March 31 → April 1 (gregMonth changes from 2 to 3). Handle year boundaries too.
+
+11. Ignore non-data rows like "CLOCK CHANGE", "BST", notes, or blank rows. The times in the CSV ALREADY account for clock changes — just copy them exactly.
+
+12. title: Islamic month if identifiable (e.g. "Ramadan 1447 AH"). If it spans months, use the primary one.
 
 Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
 
@@ -458,7 +471,7 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
             { role: 'user', content: body.csv },
           ],
           temperature: 0,
-          max_tokens: 16000,
+          max_tokens: 64000,
         }),
       });
 
