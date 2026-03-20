@@ -471,7 +471,7 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
             { role: 'user', content: body.csv },
           ],
           temperature: 0,
-          max_tokens: 64000,
+          max_tokens: 16384,
         }),
       });
 
