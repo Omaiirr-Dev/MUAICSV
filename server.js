@@ -435,7 +435,7 @@ CRITICAL RULES:
 
 4. CLOCK CHANGE rows: The schedule may contain rows like "CLOCK CHANGE" or "Clocks go forward/back". These are informational annotations — SKIP them entirely. Do NOT create a day object for them. The times in rows AFTER a clock change are already adjusted by the schedule author — just read and copy them as-is.
 
-5. Ditto marks (") mean "same as the row above" — repeat the previous row's value for that column.
+5. DITTO MARKS — this is critical. A cell containing just a double-quote character (") means "same as the row above". You MUST resolve these by carrying forward the last explicit value. This applies to ALL columns, especially jamat/congregation times. For example if Fajr Jamat is "5:15" on Friday, then Saturday shows ", Sunday shows ", Monday shows " — ALL of those must output "5:15" until a new explicit time appears (e.g. "5:00" on the next Friday). Never output an empty string when the source has a ditto mark — always carry the previous value forward.
 
 6. MONTH TRANSITIONS: The Gregorian date column may show a month name (e.g. "Apr", "May") instead of a number when the month changes. Track the current month and increment the day accordingly. Example sequence: "28", "29", "30", "31", "Apr" (= April 1), "2", "3"... When you see a month name, set the current month to that month and the day to 1. Continue counting from there.
 
