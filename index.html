@@ -56,6 +56,7 @@
     }
 
     /* ── Upload zone ── */
+    /* upload-zone kept minimal for legacy compat */
     .upload-zone {
       border: 1px dashed #3a1818; border-radius: 6px; padding: 24px;
       text-align: center; background: #120c0c; cursor: pointer;
@@ -308,41 +309,10 @@
 <div class="main">
 
   <div class="section" id="section-upload">
-    <div class="section-title">Import CSV</div>
-    <div class="upload-zone" id="drop-zone">
-      <input type="file" id="csv-file" accept=".csv" />
-      <div class="upload-icon"></div>
-      <h2>Drop your prayer times CSV here</h2>
-      <p>or click to browse</p>
-    </div>
-    <div style="margin-top:6px; text-align:right;">
-      <span class="raw-toggle" id="paste-toggle">or paste timetable text</span>
-    </div>
-    <div id="paste-area" class="hidden" style="margin-top:8px;">
-      <textarea id="csv-paste" rows="6" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste timetable text here — CSV, tab-separated, or copied from a spreadsheet/PDF..."></textarea>
-      <button class="btn btn-secondary" style="margin-top:6px;" id="parse-paste-btn">Parse pasted text</button>
-    </div>
-  </div>
-
-  <div id="parse-chooser-wrap" class="section hidden">
-    <div class="section-title">Parse method</div>
-    <div class="parse-chooser">
-      <div class="parse-option" id="parse-script">
-        <div class="parse-option-icon">&gt;_</div>
-        <div>
-          <div class="parse-option-title">Script Parse</div>
-          <div class="parse-option-desc">Standard MUAI format</div>
-        </div>
-      </div>
-      <div class="parse-option ai hidden" id="parse-ai">
-        <div class="parse-option-icon">AI</div>
-        <div>
-          <div class="parse-option-title">AI Parse</div>
-          <div class="parse-option-desc">Any CSV format</div>
-        </div>
-      </div>
-    </div>
-    <div id="parse-loading" class="parse-loading hidden">
+    <div class="section-title">Paste Timetable</div>
+    <textarea id="csv-paste" rows="8" style="width:100%;background:#080808;color:#666;border:1px solid var(--border);border-radius:3px;padding:8px;font-family:'SF Mono','Consolas',monospace;font-size:0.7rem;resize:vertical;" placeholder="Paste your prayer timetable here — copied from a spreadsheet, PDF, or any text format..."></textarea>
+    <button class="btn btn-secondary" style="margin-top:6px;width:100%;" id="parse-paste-btn">Parse with AI</button>
+    <div id="parse-loading" class="parse-loading hidden" style="margin-top:8px;">
       <span class="spinner"></span> AI is reading your timetable...
     </div>
   </div>
@@ -953,34 +923,13 @@ function loadData(data) {
   showAlert(`Parsed ${data.days.length} days from "${data.title}"`, 'success');
 }
 
-function handleCSVText(text) {
-  pendingCSVText = text;
-  const wrap = document.getElementById('parse-chooser-wrap');
-  wrap.classList.remove('hidden');
-  wrap.querySelector('.parse-chooser').classList.remove('hidden');
-  document.getElementById('parse-loading').classList.add('hidden');
-  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function scriptParse() {
-  if (!pendingCSVText) return;
-  document.getElementById('parse-chooser-wrap').classList.add('hidden');
-  try {
-    const rows = parseCSV(pendingCSVText);
-    const data = parsePrayerData(rows);
-    loadData(data);
-  } catch (err) {
-    showAlert(`Parse error: ${err.message}`, 'error');
-    console.error(err);
-  }
-}
-
 async function aiParse() {
-  if (!pendingCSVText) return;
-  const wrap = document.getElementById('parse-chooser-wrap');
+  const text = document.getElementById('csv-paste').value.trim();
+  if (!text) { showAlert('Nothing pasted yet.', 'error'); return; }
+  pendingCSVText = text;
   const loading = document.getElementById('parse-loading');
-  const chooser = wrap.querySelector('.parse-chooser');
-  chooser.classList.add('hidden');
+  const btn = document.getElementById('parse-paste-btn');
+  btn.disabled = true;
   loading.classList.remove('hidden');
   try {
     const resp = await fetch('/api/ai-parse', {
@@ -992,14 +941,15 @@ async function aiParse() {
       throw new Error(err.error || `Server error ${resp.status}`);
     }
     const data = await resp.json();
-    wrap.classList.add('hidden');
+    loading.classList.add('hidden');
     loadData(data);
     showAlert(`AI parsed ${data.days.length} days from "${data.title}"`, 'success');
   } catch (err) {
     loading.classList.add('hidden');
-    chooser.classList.remove('hidden');
     showAlert(`AI parse failed: ${err.message}`, 'error');
     console.error(err);
+  } finally {
+    btn.disabled = false;
   }
 }
 
@@ -1097,62 +1047,13 @@ async function fetchAndRenderQueue() {
 // EVENT WIRING
 // ─────────────────────────────────────────────
 
-const fileInput = document.getElementById('csv-file');
-const dropZone = document.getElementById('drop-zone');
-
-dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
-  reader.readAsText(file);
-});
-
-dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over'); });
-dropZone.addEventListener('drop', e => {
-  e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => { markAccepted(file.name); handleCSVText(ev.target.result); };
-  reader.readAsText(file);
-});
-
-function markAccepted(filename) {
-  dropZone.classList.add('accepted');
-  dropZone.querySelector('.upload-icon').textContent = '';
-  dropZone.querySelector('h2').textContent = filename;
-  dropZone.querySelector('p').textContent = 'File loaded \u2014 choose a parse method below';
-}
-
-function resetDropZone() {
-  dropZone.classList.remove('accepted');
-  dropZone.querySelector('.upload-icon').textContent = '';
-  dropZone.querySelector('h2').textContent = 'Drop your prayer times CSV here';
-  dropZone.querySelector('p').textContent = 'or click to browse';
-}
-
-document.getElementById('paste-toggle').addEventListener('click', () => {
-  document.getElementById('paste-area').classList.toggle('hidden');
-});
-
-document.getElementById('parse-paste-btn').addEventListener('click', () => {
-  const text = document.getElementById('csv-paste').value;
-  if (!text.trim()) { showAlert('Nothing pasted yet.', 'error'); return; }
-  markAccepted('Pasted text');
-  handleCSVText(text);
-});
+document.getElementById('parse-paste-btn').addEventListener('click', aiParse);
 
 // Clear
 document.getElementById('clear-btn').addEventListener('click', () => {
   parsedData = null; pendingCSVText = null;
   document.getElementById('data-area').classList.add('hidden');
-  document.getElementById('parse-chooser-wrap').classList.add('hidden');
-  document.getElementById('csv-file').value = '';
   document.getElementById('csv-paste').value = '';
-  resetDropZone();
 });
 
 // Preview — toggle inline below
@@ -1306,14 +1207,10 @@ document.getElementById('msg-send-btn').addEventListener('click', async () => {
   }
 });
 
-// Parse mode chooser
-document.getElementById('parse-script').addEventListener('click', scriptParse);
-document.getElementById('parse-ai').addEventListener('click', aiParse);
-
 // Check AI availability on load
 fetch('/api/ai-available').then(r => r.json()).then(d => {
   aiAvailable = d.available;
-  if (aiAvailable) document.getElementById('parse-ai').classList.remove('hidden');
+  if (!aiAvailable) document.getElementById('parse-paste-btn').textContent = 'AI not available — check API key';
 }).catch(() => {});
 
 // Load queue immediately and poll every 15s to stay in sync across all users
