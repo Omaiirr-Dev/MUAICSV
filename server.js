@@ -471,13 +471,13 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
         },
         signal: controller.signal,
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-5.4-mini',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: body.csv },
           ],
           temperature: 0,
-          max_tokens: 16000,
+          max_tokens: 32000,
           response_format: { type: 'json_object' },
         }),
       });
@@ -510,7 +510,7 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
         return;
       }
 
-      console.log(`[AI] Parsed ${parsed.days.length} days (model: gpt-4o)`);
+      console.log(`[AI] Parsed ${parsed.days.length} days (model: gpt-5.4-mini)`);
       json(res, 200, parsed);
     } catch (e) {
       if (e.name === 'AbortError') {
