@@ -33,7 +33,7 @@ const ALLOWED_IPS    = (process.env.ALLOWED_IPS || '78.150.44.100,88.97.208.41')
                          .split(',').map(s => s.trim());
 const NTFY_CHANNEL   = process.env.NTFY_CHANNEL || 'muaiprayer';
 const NTFY_SERVER    = process.env.NTFY_SERVER   || 'https://ntfy.sh';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 
 // Session tokens: token -> expiry timestamp
 const sessions = new Map();
@@ -400,13 +400,13 @@ const server = http.createServer(async (req, res) => {
 
   // ── API: GET /api/ai-available — check if OpenAI key is configured ──────
   if (url === '/api/ai-available' && req.method === 'GET') {
-    json(res, 200, { available: !!GEMINI_API_KEY });
+    json(res, 200, { available: !!OPENAI_API_KEY });
     return;
   }
 
-  // ── API: POST /api/ai-parse — use Gemini to extract prayer times ──────
+  // ── API: POST /api/ai-parse — use OpenAI to extract prayer times ──────
   if (url === '/api/ai-parse' && req.method === 'POST') {
-    if (!GEMINI_API_KEY) { json(res, 501, { error: 'Gemini API key not configured' }); return; }
+    if (!OPENAI_API_KEY) { json(res, 501, { error: 'OpenAI API key not configured' }); return; }
 
     const raw = await parseBody(req);
     let body;
@@ -420,95 +420,87 @@ const server = http.createServer(async (req, res) => {
     });
     const currentYear = now.toLocaleDateString('en-GB', { timeZone: UK_TZ, year: 'numeric' });
 
-    const systemPrompt = `You extract prayer times from CSV/spreadsheet data into JSON. Today is ${todayStr}. Year: ${currentYear}.
+    const systemPrompt = `You are a precise data-extraction tool. You read prayer timetable text (CSV, TSV, or pasted table) and output structured JSON. Today is ${todayStr}. Year: ${currentYear}.
 
-Output format — return a JSON object with "title" (string) and "days" (array). Each day object:
-{"day":"Mon","hijriDate":"1","gregDate":"3","gregFull":"Mon, 3 Mar 2025","gregYear":2025,"gregMonth":2,"gregDay":3,"fajrStart":"5:23","fajrJamat":"5:38","sunrise":"6:45","zuhrStart":"12:30","zuhrJamat":"13:00","asrStart":"15:45","asrJamat":"16:15","maghribAdhan":"17:27","maghribJamat":"17:27","ishaStart":"19:45","ishaJamat":"20:15"}
+OUTPUT FORMAT — return a JSON object with "title" (string) and "days" (array). Each day object:
+{"day":"Mon","hijriDate":"1","gregDate":"3","gregFull":"Mon, 3 Mar 2026","gregYear":2026,"gregMonth":2,"gregDay":3,"fajrStart":"5:23","fajrJamat":"5:38","sunrise":"6:45","zuhrStart":"12:30","zuhrJamat":"13:00","asrStart":"15:45","asrJamat":"16:15","maghribAdhan":"17:27","maghribJamat":"17:32","ishaStart":"19:45","ishaJamat":"20:15"}
 
-CRITICAL RULES — READ CAREFULLY:
+CRITICAL RULES:
 
-1. OUTPUT EVERY DAY. You MUST output EVERY SINGLE DAY from the data. If it spans March 20 to April 30, output ALL 42 days. Do NOT stop at end of a month. Do NOT skip any days. Your output row count MUST match the input row count exactly.
+1. OUTPUT EVERY SINGLE DAY in the schedule. The schedule may span MULTIPLE months (e.g. March, April, May). You MUST output ALL of them — do NOT stop at the end of any month. If the schedule has 60 rows of data, output 60 day objects.
 
-2. EXACT TIMES. Copy times EXACTLY as they appear. Do NOT round, adjust, or estimate. If the data says "5:08", output "5:08" — not "5:10". Every minute matters for prayer times.
+2. COPY TIMES EXACTLY as they appear in the source. Do NOT round, estimate, or adjust times. If the source says "4:32" for Fajr, output "4:32". If it says "6:21" for sunset, output "18:21" (just add 12 for PM conversion). The MINUTES must match the source exactly — never add or subtract minutes.
 
-3. 24H FORMAT. Convert PM times: Fajr/Sunrise are AM (keep as-is). Zuhr onward are PM — add 12: "3:36" Asr → "15:36", "5:27" sunset → "17:27", "6:59" Isha → "18:59". If a time is already ≥12 (like "12:30" Zuhr), keep it.
+3. 24-hour format conversion: Fajr and Sunrise are always AM — keep as-is. Zuhr is PM if the value is < 12 (e.g. "1:17" → "13:17", "12:20" stays "12:20"). Asr, Sunset/Maghrib, and Isha values < 12 are PM — add 12 to the hour (e.g. "4:24" Asr → "16:24", "6:21" sunset → "18:21", "7:44" Isha → "19:44"). If a time is already ≥ 12, keep it as-is.
 
-4. COLUMN IDENTIFICATION. The spreadsheet typically has these columns in order:
-   - Day name (Mon/Tue/etc.)
-   - Hijri date (Islamic calendar number) → hijriDate
-   - Gregorian date (day number within the Gregorian month, e.g. "20", "21") → gregDate
-   - Then prayer time columns: Fajr Start, Fajr Jamat, Sunrise, Zuhr Start, Zuhr Jamat, Asr Start, Asr Jamat, Maghrib/Sunset, Maghrib Jamat, Isha Start, Isha Jamat
-   The Hijri date is NOT the Gregorian date. They are separate columns. Use the Gregorian column for gregDate/gregDay/gregFull.
+4. CLOCK CHANGE rows: The schedule may contain rows like "CLOCK CHANGE" or "Clocks go forward/back". These are informational annotations — SKIP them entirely. Do NOT create a day object for them. The times in rows AFTER a clock change are already adjusted by the schedule author — just read and copy them as-is.
 
-5. MONTH HEADERS. The spreadsheet has separate month header rows for Hijri months (e.g. "Shawwal", "Dhul-Qadah") and Gregorian months (e.g. "March", "April", "May"). Use Gregorian month names for gregFull and gregMonth. When you see a new Gregorian month header (like "Apr" or "April"), the following rows' gregDate resets to 1 and gregMonth increments.
+5. Ditto marks (") mean "same as the row above" — repeat the previous row's value for that column.
 
-6. Sunset = Maghrib. Any column called Sunset/Sun Set/Iftar/Maghrib → maghribAdhan.
+6. MONTH TRANSITIONS: The Gregorian date column may show a month name (e.g. "Apr", "May") instead of a number when the month changes. Track the current month and increment the day accordingly. Example sequence: "28", "29", "30", "31", "Apr" (= April 1), "2", "3"... When you see a month name, set the current month to that month and the day to 1. Continue counting from there.
 
-7. Extract BOTH start times AND jamat/congregation/iqamah times.
+7. Sunset = Maghrib. Any column labelled Sunset, Sun Set, Iftar, or Maghrib → use as maghribAdhan.
 
-8. Ditto marks (") mean "same as the row above" — repeat the previous value.
+8. Extract BOTH start/adhan times AND jamat/congregation/iqamah times.
 
-9. If a jamat column has text instructions:
+9. If a jamat column contains text instructions instead of times:
    - "15 minutes after fajr beginning" → fajrJamat = fajrStart + 15 minutes
-   - "straight after breaking fast/iftar" → maghribJamat = same as maghribAdhan
-   - "X minutes after [prayer]" → add X minutes to that prayer's start time
-   Apply computed time to ALL rows.
+   - "straight after iftar" → maghribJamat = same as maghribAdhan
+   - Any "X minutes after [prayer]" → add X minutes to that prayer's start time
+   Apply consistently to ALL rows.
 
-10. If no jamat time exists, set to empty string "".
+10. If no jamat time exists for a prayer, set it to empty string "".
 
 11. gregMonth is 0-indexed (Jan=0, Feb=1, Mar=2, Apr=3, etc.). Day names: Mon,Tue,Wed,Thu,Fri,Sat,Sun.
 
-12. IGNORE non-data rows: "CLOCK CHANGE", "BST", "GMT", "*CC", notes. The times ALREADY account for clock changes — just copy them exactly.
+12. title: Use the Islamic month name if identifiable (e.g. "Shawwal 1447 AH"). If the schedule spans multiple Islamic months, use the first one.
 
-13. title: Islamic month if identifiable (e.g. "Ramadan 1447 AH"). If it spans months, use the primary one.
-
-14. The input may be raw spreadsheet data (XLS/binary) — extract the prayer data from whatever readable text you find. Focus on rows that have a day name and time values.
+13. The input may be tab-separated, comma-separated, or space-aligned pasted text. Parse whatever format is given.
 
 Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
 
-    const GEMINI_MODEL = 'gemini-2.5-flash';
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout
+      const timeout = setTimeout(() => controller.abort(), 90000);
 
-      const geminiResp = await fetch(geminiUrl, {
+      const openaiResp = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
         signal: controller.signal,
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: [{
-            role: 'user',
-            parts: [{ text: `IMPORTANT: Count the data rows below carefully. You must output the EXACT same number of day objects.\n\n${body.csv}` }],
-          }],
-          generationConfig: {
-            temperature: 0,
-            maxOutputTokens: 65536,
-          },
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: body.csv },
+          ],
+          temperature: 0,
+          max_tokens: 16000,
+          response_format: { type: 'json_object' },
         }),
       });
       clearTimeout(timeout);
 
-      if (!geminiResp.ok) {
-        const errText = await geminiResp.text().catch(() => '');
-        console.error(`[AI] Gemini ${geminiResp.status}: ${errText}`);
-        let detail = `Gemini ${geminiResp.status}`;
+      if (!openaiResp.ok) {
+        const errText = await openaiResp.text().catch(() => '');
+        console.error(`[AI] OpenAI ${openaiResp.status}: ${errText}`);
+        let detail = `OpenAI ${openaiResp.status}`;
         try { detail = JSON.parse(errText).error?.message || detail; } catch {}
         json(res, 502, { error: detail });
         return;
       }
 
-      const result = await geminiResp.json();
-      const content = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const result = await openaiResp.json();
+      const content = result.choices?.[0]?.message?.content || '';
 
-      // Strip markdown fences if present
+      // Strip markdown fences if the model wraps them despite instructions
       const cleaned = content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
       let parsed;
       try { parsed = JSON.parse(cleaned); } catch {
-        console.error('[AI] Failed to parse Gemini response:', content.slice(0, 500));
+        console.error('[AI] Failed to parse OpenAI response:', content.slice(0, 500));
         json(res, 502, { error: 'AI returned invalid JSON' });
         return;
       }
@@ -518,11 +510,16 @@ Return ONLY valid JSON. No markdown, no backticks, no explanation.`;
         return;
       }
 
-      console.log(`[AI] Parsed ${parsed.days.length} days from CSV (model: ${GEMINI_MODEL})`);
+      console.log(`[AI] Parsed ${parsed.days.length} days (model: gpt-4o)`);
       json(res, 200, parsed);
     } catch (e) {
-      console.error('[AI] Error:', e.message);
-      json(res, 500, { error: 'AI parse failed: ' + e.message });
+      if (e.name === 'AbortError') {
+        console.error('[AI] Request timed out after 90s');
+        json(res, 504, { error: 'AI request timed out (90s). Try a smaller schedule or retry.' });
+      } else {
+        console.error('[AI] Error:', e.message);
+        json(res, 500, { error: 'AI parse failed: ' + e.message });
+      }
     }
     return;
   }
