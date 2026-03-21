@@ -765,9 +765,9 @@ function tickCountdown() {
 function extractJamat(details) {
   if (!details) return '';
   const match = details.match(/Jamat\s*[·\u00b7]\s*(.+)/);
-  if (match) return 'Jamat ' + match[1].trim();
+  if (match) return match[1].trim();
   const matchAt = details.match(/Jamat at (.+)/);
-  if (matchAt) return 'Jamat ' + matchAt[1].trim();
+  if (matchAt) return matchAt[1].trim();
   return '';
 }
 
@@ -801,10 +801,10 @@ function renderPrayers(prayers, nextPrayer) {
       <div class="prayer-icon">${icon}</div>
       <div class="prayer-info">
         <div class="prayer-name">${p.meta.name}</div>
-        ${jamat ? `<div class="prayer-jamat">${jamat}</div>` : ''}
       </div>
       <div class="prayer-time-col">
         <div class="prayer-adhan-time">${p.fireTimeFmt || '\u2014'}</div>
+        ${jamat ? `<div class="prayer-jamat-time">${jamat}</div>` : ''}
       </div>
     </div>`;
   }
@@ -824,32 +824,51 @@ function groupByDay(queue) {
   return Array.from(map.entries()).map(([label, prayers]) => ({ label, prayers }));
 }
 
+function fmtTimeDisplay(t) {
+  if (!t) return '\u2014';
+  const parts = t.match(/^(\d+):(\d+)$/);
+  if (!parts) return t;
+  let h = parseInt(parts[1]), m = parts[2];
+  const ampm = h < 12 ? 'AM' : 'PM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
 function renderCalendarDay() {
   if (allDays.length === 0) return;
-  const day = allDays[calDayIndex];
-  document.getElementById('cal-label').textContent = day.label;
+  const entry = allDays[calDayIndex];
+  document.getElementById('cal-label').textContent = entry.label;
   document.getElementById('cal-sub').textContent = `Day ${calDayIndex + 1} of ${allDays.length}`;
 
   document.getElementById('cal-prev').disabled = calDayIndex === 0;
   document.getElementById('cal-next').disabled = calDayIndex >= allDays.length - 1;
 
-  const sorted = day.prayers
-    .map(p => ({ ...p, meta: lookupMeta(p.title) }))
-    .sort((a, b) => a.meta.order - b.meta.order);
-
+  const d = entry.day;
   let html = `<div class="cal-prayer-row" style="padding:8px 18px;border-bottom:1px solid #eee;">
     <div class="cal-prayer-name" style="font-size:0.65rem;color:var(--text-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Prayer</div>
     <div class="cal-prayer-time" style="font-size:0.65rem;color:var(--text-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Time</div>
     <div class="cal-prayer-jamat" style="font-size:0.65rem;color:var(--text-muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Jamat</div>
   </div>`;
-  for (const p of sorted) {
-    const jamat = extractJamat(p.details);
-    const icon = PRAYER_ICONS[p.meta.iconKey] || PRAYER_ICONS.fajr;
-    html += `<div class="cal-prayer-row">
-      <div class="cal-prayer-name"><span class="cal-prayer-icon">${icon}</span>${p.meta.name}</div>
-      <div class="cal-prayer-time">${p.fireTimeFmt || '\u2014'}</div>
-      <div class="cal-prayer-jamat">${jamat || '\u00A0'}</div>
-    </div>`;
+
+  if (d) {
+    const prayers = [
+      { name: 'Fajr',    iconKey: 'fajr',    time: d.fajrStart,    jamat: d.fajrJamat },
+      { name: 'Sunrise', iconKey: 'sunrise',  time: d.sunrise,      jamat: '' },
+      { name: d.day === 'Fri' ? "Jumu'ah" : 'Zuhr', iconKey: 'zuhr', time: d.zuhrStart, jamat: d.zuhrJamat },
+      { name: 'Asr',     iconKey: 'asr',      time: d.asrStart,     jamat: d.asrJamat },
+      { name: 'Maghrib', iconKey: 'maghrib',  time: d.maghribAdhan, jamat: d.maghribJamat },
+      { name: 'Isha',    iconKey: 'isha',     time: d.ishaStart,    jamat: d.ishaJamat },
+    ];
+    for (const p of prayers) {
+      const icon = PRAYER_ICONS[p.iconKey] || PRAYER_ICONS.fajr;
+      html += `<div class="cal-prayer-row">
+        <div class="cal-prayer-name"><span class="cal-prayer-icon">${icon}</span>${p.name}</div>
+        <div class="cal-prayer-time">${fmtTimeDisplay(p.time)}</div>
+        <div class="cal-prayer-jamat">${p.jamat ? fmtTimeDisplay(p.jamat) : '\u00A0'}</div>
+      </div>`;
+    }
+  } else {
+    html += `<div class="cal-prayer-row" style="justify-content:center;padding:24px;color:var(--text-muted);font-size:0.8rem;">No schedule data for this day</div>`;
   }
 
   document.getElementById('cal-list').innerHTML = html;
@@ -912,7 +931,13 @@ async function fetchCalendar() {
 
     if (data.days && data.days.length > 0) {
       allDays = data.days;
-      calDayIndex = 0;
+      // Default to today's date or the first day
+      const now = new Date();
+      const todayStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      // Find today in the list by matching the date portion
+      const todayParts = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const todayIdx = allDays.findIndex(d => d.label && d.label.includes(todayParts));
+      calDayIndex = todayIdx >= 0 ? todayIdx : 0;
       document.getElementById('calendar-section').style.display = '';
       renderCalendarDay();
     }

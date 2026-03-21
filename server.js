@@ -88,6 +88,21 @@ function saveQueue(queue) {
   fs.writeFileSync(QUEUE_FILE, JSON.stringify(queue, null, 2), 'utf8');
 }
 
+// ─── DAYS PERSISTENCE (prayer times archive) ────────────────────────────────
+const DAYS_FILE = path.join(DATA_DIR, 'days.json');
+
+function loadDays() {
+  try {
+    return JSON.parse(fs.readFileSync(DAYS_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function saveDays(days) {
+  fs.writeFileSync(DAYS_FILE, JSON.stringify(days, null, 2), 'utf8');
+}
+
 // ─── NTFY PUSH (instant, no scheduling) ──────────────────────────────────────
 // Server is the scheduler. ntfy is just the delivery pipe — fires immediately.
 const EMOJI_TO_TAG = {
@@ -324,21 +339,49 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ── API: GET /api/calendar — return all future queue days for calendar browsing ──
-  if (url === '/api/calendar' && req.method === 'GET') {
-    const queue = loadQueue();
-    const nowISO = new Date().toISOString();
-    // Group by gregFull, only include days with future or today's prayers
-    const dayMap = new Map();
-    for (const n of queue) {
-      const key = n.gregFull || 'Unknown';
-      if (!dayMap.has(key)) dayMap.set(key, []);
-      dayMap.get(key).push(n);
+  // ── API: POST /api/days — store parsed prayer day data persistently ──────
+  if (url === '/api/days' && req.method === 'POST') {
+    const raw = await parseBody(req);
+    let incoming;
+    try { incoming = JSON.parse(raw); } catch { json(res, 400, { error: 'invalid json' }); return; }
+    if (!Array.isArray(incoming)) { json(res, 400, { error: 'expected array' }); return; }
+
+    const stored = loadDays();
+    const map = new Map(stored.map(d => [d.gregFull, d]));
+    for (const d of incoming) {
+      if (d.gregFull) map.set(d.gregFull, d);
     }
-    const days = Array.from(dayMap.entries())
-      .map(([label, prayers]) => ({ label, prayers }))
-      .filter(d => d.prayers.some(p => p.fireUTC && p.fireUTC >= nowISO.slice(0, 10)));
-    json(res, 200, { days });
+    const merged = Array.from(map.values())
+      .sort((a, b) => {
+        const da = new Date(a.gregYear, a.gregMonth, a.gregDay);
+        const db = new Date(b.gregYear, b.gregMonth, b.gregDay);
+        return da - db;
+      });
+    saveDays(merged);
+    console.log(`[Days] Stored ${merged.length} days (${incoming.length} new/updated)`);
+    json(res, 200, { stored: merged.length, updated: incoming.length });
+    return;
+  }
+
+  // ── API: GET /api/calendar — return all stored days for calendar browsing ──
+  if (url === '/api/calendar' && req.method === 'GET') {
+    const days = loadDays();
+    // Build calendar entries from stored days, augmenting with queue notification data
+    const queue = loadQueue();
+    const queueByDay = new Map();
+    for (const n of queue) {
+      const key = n.gregFull || '';
+      if (!queueByDay.has(key)) queueByDay.set(key, []);
+      queueByDay.get(key).push(n);
+    }
+
+    const calDays = days.map(d => ({
+      label: d.gregFull,
+      day: d,
+      prayers: queueByDay.get(d.gregFull) || [],
+    }));
+
+    json(res, 200, { days: calDays });
     return;
   }
 

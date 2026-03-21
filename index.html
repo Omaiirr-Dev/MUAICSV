@@ -943,6 +943,11 @@ async function aiParse() {
     const data = await resp.json();
     loading.classList.add('hidden');
     loadData(data);
+    // Persist parsed days to server for calendar history
+    fetch('/api/days', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data.days),
+    }).catch(() => {});
     showAlert(`AI parsed ${data.days.length} days from "${data.title}"`, 'success');
   } catch (err) {
     loading.classList.add('hidden');
